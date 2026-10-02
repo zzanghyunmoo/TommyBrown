@@ -9,7 +9,7 @@ await Promise.all([
     platform: "node",
     target: "node24",
     format: "cjs",
-    external: ["electron"],
+    external: ["electron", "node-pty"],
   }),
   bundle({
     entryPoints: ["src/preload/index.ts"],

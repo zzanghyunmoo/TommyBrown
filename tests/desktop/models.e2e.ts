@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
+import { desktopCommand, desktopWindow } from "./launch";
 
 test("install, start, stop, and restore the real native model gateway", async () => {
   const directory = resolve(".local", `desktop-models-${randomUUID()}`);
@@ -10,13 +11,13 @@ test("install, start, stop, and restore the real native model gateway", async ()
   for (const [key, value] of Object.entries(process.env))
     if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE") env[key] = value;
   const options = {
-    args: ["."],
+    ...desktopCommand(),
     env: { ...env, TOMMYBROWN_TEST: "1", TOMMYBROWN_DATA_DIR: directory },
   };
   const desktop = await electron.launch(options);
   let encryptedHash = "";
   try {
-    const page = await desktop.firstWindow();
+    const page = await desktopWindow(desktop);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await expect(
@@ -66,7 +67,7 @@ test("install, start, stop, and restore the real native model gateway", async ()
   }
   const reopened = await electron.launch(options);
   try {
-    const page = await reopened.firstWindow();
+    const page = await desktopWindow(reopened);
     await expect(
       page.getByRole("button", { name: "게이트웨이 시작", exact: true }),
     ).toBeVisible();

@@ -5,5 +5,5 @@ export default defineConfig({
   testMatch: "**/*.e2e.ts",
   workers: 1,
   timeout: 45_000,
-  reporter: "list",
+  reporter: [["list"], ["json", { outputFile: "test-results/desktop-report.json" }]],
 });

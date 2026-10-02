@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
+import { desktopCommand, desktopWindow } from "./launch";
 
 test("native component showcase preserves keyboard access and bounded layout", async () => {
   const directory = resolve(".local", `showcase-${randomUUID()}`);
@@ -10,7 +11,7 @@ test("native component showcase preserves keyboard access and bounded layout", a
   for (const [key, value] of Object.entries(process.env))
     if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE") env[key] = value;
   const desktop = await electron.launch({
-    args: ["."],
+    ...desktopCommand(),
     env: {
       ...env,
       TOMMYBROWN_TEST: "1",
@@ -19,7 +20,7 @@ test("native component showcase preserves keyboard access and bounded layout", a
     },
   });
   try {
-    const page = await desktop.firstWindow();
+    const page = await desktopWindow(desktop);
     await expect(
       page.getByRole("heading", { name: "TommyBrown controls" }),
     ).toBeVisible();

@@ -16,9 +16,14 @@ bun run start
 ```
 
 In Model access, install the engine, start the gateway, and connect an account in
-your browser. Select a discovered model and Claude Code or Codex, then copy the
-PowerShell launch command. The command contains a local gateway key and restores
-the previous process environment when the CLI exits. Install the chosen CLI separately.
+your browser. Open a workspace, choose Claude Code or Codex and a discovered model,
+then start a terminal session. Routing applies to that session only. Install the chosen
+CLI separately using its native installer or standard npm package; npm installations
+also need Node.js on PATH. Custom shell wrappers are not supported.
+
+The model-access page can also copy an opt-in PowerShell command for an external
+terminal. That command contains a local gateway key and restores the previous
+process environment when the CLI exits.
 
 The gateway uses loopback port 8317. An occupied port produces an error; TommyBrown
 does not stop other applications. Closing TommyBrown stops its own gateway.
@@ -26,13 +31,48 @@ Account files stay in local application data with Windows access restricted to t
 current user. Application keys use OS encryption. Provider token files are managed
 by CLIProxyAPI and are not encrypted by TommyBrown itself.
 
-## Development status
+## Workspace and connectors
 
-The native model-access window, verified engine installer, gateway lifecycle, OAuth
-handoff, and opt-in CLI command generation are implemented. Live provider consent
-and cross-CLI inference have not yet been verified. The ADE, connectors, offline
-vault workflow, and Windows distribution package are still being implemented.
-See [verification evidence](docs/verification/2026-10-03-model-access.md).
+- Open a folder as a space. Run PowerShell, Claude Code, or Codex in real terminals.
+  Terminal sessions stay alive when switching tabs and stop when closed or the app exits.
+- Browse, edit, and save text in the right pane. Markdown has an offline preview.
+  External edits produce a conflict instead of overwriting your draft.
+- Click a terminal HTTP(S) link to open the right browser pane. Browser sessions have
+  no local IPC or Node privileges; each connector has its own persistent session.
+- Add browser, Slack/Discord, Jira/Linear, Confluence/Notion, or GitLab/GitHub web screens.
+  Embedded login restrictions may require the external-browser button. External login
+  does not transfer cookies into the embedded view.
+- For agent data and tools, configure a trusted Streamable HTTP MCP endpoint and an
+  optional bearer token. Web login is separate from MCP authentication. Inspect and
+  explicitly run tools in the connector pane, or select connections for a new CLI session.
+  OAuth-only MCP servers require an issued token or a compatible local adapter.
+- Choose a local Obsidian vault to browse, search, preview, and edit Markdown offline.
+  The Obsidian button opens the installed local app. Vault use does not require Sync
+  or upload notes; remote images are suppressed in previews.
+
+Spaces, document/browser tab selection, view settings, and connector definitions restore
+after restart. Save drafts before quitting. Running processes and terminal output do not
+resume after an application restart. Disconnecting a connector stops terminals using it
+and removes its local definition, stored token, and embedded browser session.
+
+## Windows package
+
+```sh
+bun run package:windows
+```
+
+The command writes `release/windows-<timestamp>/TommyBrown-win32-x64/`.
+Run `TommyBrown.exe` from that folder and keep its companion files together. This is
+an unsigned Windows x64 development build, not an installer or an auto-updating release.
+Other operating systems and architectures have not been validated.
+
+## Development status and verification
+
+The gateway, ADE, connectors, offline vault, and Windows package are implemented.
+Live provider consent, cross-CLI inference/streaming/tool use, authenticated named-service
+integrations, and opening an actual installed Obsidian vault remain unverified.
+The full product goal is therefore still open. See the
+[desktop checkpoint](docs/verification/2026-10-03-desktop-workspace.md).
 
 ```sh
 bun run check
@@ -45,6 +85,12 @@ bun run smoke:proxy
 
 Desktop and smoke tests download the pinned public gateway release. They use isolated
 test data and do not complete provider consent or spend model credits.
+
+To exercise a packaged build, set `TOMMYBROWN_PACKAGED_APP` to its executable before
+running `bun run test:desktop`. These tests show temporary native windows and keep
+screenshots and fixture data in ignored directories. Connector tests use local fixtures,
+not live service accounts. `bun run doctor:react` currently reports reviewed advisory
+findings; see the checkpoint for their disposition.
 
 The intended experience combines:
 

@@ -145,6 +145,10 @@ export class ModelService {
   }
 
   async copyLaunch(input: unknown): Promise<void> {
+    clipboard.writeText(powershellLaunch(await this.launchProfile(input)));
+  }
+
+  async launchProfile(input: unknown) {
     const request = launchRequestSchema.parse(input);
     const gateway = this.runtime.status;
     if (gateway.phase !== "running")
@@ -158,13 +162,9 @@ export class ModelService {
         "configuration",
         "Select a model available from your connected accounts.",
       );
-    clipboard.writeText(
-      powershellLaunch(
-        createLaunchProfile(request, {
-          port: gateway.port,
-          key: this.keys.client,
-        }),
-      ),
-    );
+    return createLaunchProfile(request, {
+      port: gateway.port,
+      key: this.keys.client,
+    });
   }
 }

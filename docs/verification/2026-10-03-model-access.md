@@ -2,6 +2,8 @@
 
 Windows x64, Node.js 24.11.1, Bun 1.3.14, Electron 44.5.1, CLIProxyAPI 8.0.10.
 This is an implementation checkpoint, not completion of the product contract.
+This historical gateway-only checkpoint is superseded by the
+[desktop workspace checkpoint](2026-10-03-desktop-workspace.md).
 
 | Check | Observed result |
 | --- | --- |

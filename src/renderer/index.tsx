@@ -3,6 +3,10 @@ import { App } from "./app";
 import { Showcase } from "./components/showcase";
 import "./styles.css";
 import "./workspace.css";
+import "./documents.css";
+import "./terminals.css";
+import "./browser.css";
+import "./connectors.css";
 
 if (import.meta.env.DEV) {
   void import("react-grab");
