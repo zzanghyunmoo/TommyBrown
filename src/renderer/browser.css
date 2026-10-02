@@ -1,0 +1,107 @@
+.right-workspace {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.right-pane-tabs {
+  display: flex;
+  height: 38px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--canvas);
+}
+.right-pane-tabs button {
+  padding: var(--s2) var(--s4);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.right-pane-tabs [aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--paper);
+  border-bottom: 2px solid var(--accent);
+}
+.right-pane-page {
+  flex: 1;
+  min-height: 0;
+}
+.right-pane-page[hidden] {
+  display: none;
+}
+.browser-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.browser-tabs {
+  display: flex;
+  overflow-x: auto;
+  flex-shrink: 0;
+  background: var(--canvas);
+  min-height: 38px;
+  border-bottom: 1px solid var(--line);
+}
+.browser-tab {
+  display: flex;
+  max-width: 220px;
+  flex-shrink: 0;
+}
+.browser-tab button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: var(--s2) var(--s3);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+}
+.browser-tab [aria-selected="true"] {
+  color: var(--ink);
+  background: var(--paper);
+}
+.browser-toolbar {
+  display: flex;
+  gap: var(--s1);
+  align-items: center;
+  padding: var(--s2);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.browser-toolbar input {
+  min-width: 50px;
+  flex: 1;
+  font-size: var(--text-xs);
+}
+.browser-toolbar .button {
+  padding: var(--s2);
+  flex-shrink: 0;
+}
+.browser-host {
+  flex: 1;
+  min-height: 0;
+  background: white;
+}
+.browser-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  justify-content: space-between;
+  padding: var(--s2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  border-top: 1px solid var(--line);
+}
+.markdown-link {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}

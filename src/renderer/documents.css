@@ -1,0 +1,224 @@
+.workspace-page {
+  height: 100%;
+  min-height: 0;
+}
+.workspace-page[hidden] {
+  display: none;
+}
+button.workspace-tab,
+button.space-row {
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+button.workspace-tab {
+  border-right: 1px solid var(--line);
+}
+.space-row {
+  width: 100%;
+  background: transparent;
+}
+.space-row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.space-row > small {
+  margin-left: auto;
+  color: var(--muted);
+}
+.space-row:hover,
+.tree-row:hover {
+  background: var(--wash);
+}
+.document-pane {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+.file-explorer {
+  border-right: 1px solid var(--line);
+  overflow: auto;
+  min-width: 0;
+  background: var(--canvas);
+}
+.pane-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s2) var(--s3);
+  min-height: 44px;
+  border-bottom: 1px solid var(--line);
+}
+.file-location {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  padding: var(--s3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 0;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--ink);
+}
+.tree-row > span {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tree-row > svg {
+  flex-shrink: 0;
+}
+.pane-empty {
+  padding: var(--s4);
+  font-size: var(--text-xs);
+}
+.document-editor {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.document-tabs {
+  display: flex;
+  flex-shrink: 0;
+  min-height: 44px;
+  overflow-x: auto;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--line);
+}
+.document-tab {
+  display: flex;
+  border-right: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.document-tab button {
+  background: transparent;
+  border: 0;
+  padding: var(--s2) var(--s3);
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.document-tab [aria-selected="true"] {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: inset 0 2px var(--accent);
+}
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.editor-toolbar > span {
+  margin-right: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.code-editor {
+  flex: 1;
+  min-height: 0;
+}
+.editor-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s8);
+  height: 100%;
+  text-align: center;
+  color: var(--muted);
+}
+.editor-empty h2 {
+  color: var(--ink);
+}
+.markdown-preview {
+  padding: var(--s8);
+  overflow: auto;
+  line-height: 1.75;
+}
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview p,
+.markdown-preview ul,
+.markdown-preview ol,
+.markdown-preview pre {
+  margin-bottom: var(--s4);
+}
+.markdown-preview pre {
+  padding: var(--s4);
+  background: var(--canvas);
+  overflow: auto;
+}
+.markdown-preview table {
+  border-collapse: collapse;
+}
+.markdown-preview td,
+.markdown-preview th {
+  padding: var(--s2);
+  border: 1px solid var(--line);
+}
+.vault-tools {
+  word-break: keep-all;
+  padding: var(--s3);
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: var(--s2);
+  font-size: var(--text-xs);
+}
+.vault-tools form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+.vault-tools input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.vault-result {
+  display: grid;
+  gap: var(--s1);
+  padding: var(--s2);
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.vault-result strong {
+  overflow-wrap: anywhere;
+}
+.vault-result span {
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
