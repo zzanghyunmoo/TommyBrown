@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { AppearanceBridge } from "../shared/appearance";
 import type { DesktopBridge } from "../shared/bridge";
 import type { BrowserBridge } from "../shared/browser";
 import type { ConnectorBridge } from "../shared/connectors";
@@ -8,6 +9,12 @@ import {
   workbenchEventSchema,
 } from "../shared/workbench";
 import type { WorkspaceBridge } from "../shared/workspace";
+
+const appearance: AppearanceBridge = {
+  get: () => ipcRenderer.invoke("appearance:get"),
+  set: (theme) => ipcRenderer.invoke("appearance:set", theme),
+};
+contextBridge.exposeInMainWorld("appearance", appearance);
 
 const bridge: DesktopBridge = {
   snapshot: () => ipcRenderer.invoke("models:snapshot"),

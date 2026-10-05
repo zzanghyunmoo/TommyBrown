@@ -196,7 +196,11 @@ export function BrowserPane({
           ref={address}
           type="text"
           defaultValue={tab?.url ?? ""}
-          placeholder={app ? "http://localhost:3000" : "https://example.com"}
+          placeholder={
+            app
+              ? "localhost:3000 · HTTP는 http:// 입력"
+              : "주소 입력 · 기본 HTTPS"
+          }
           aria-label={app ? "앱 주소" : "웹 주소"}
           spellCheck={false}
         />

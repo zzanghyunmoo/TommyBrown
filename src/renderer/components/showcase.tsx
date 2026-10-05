@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { Button, Notice, Panel, Status } from "./primitives";
+import { ThemeChoice } from "./theme-choice";
 
 export function Showcase() {
+  const [error, setError] = useState<string>();
   return (
     <main className="showcase">
+      <ThemeChoice report={setError} />
+      {error && <Notice error>{error}</Notice>}
       <h1>TommyBrown controls</h1>
       <p>Shared states for the desktop workspace.</p>
       <Panel

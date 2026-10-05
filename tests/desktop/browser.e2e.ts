@@ -12,6 +12,16 @@ test("embedded web pages are isolated and terminal links open in the right pane"
       `<html><head><title>Browser fixture</title></head><body style="font-family:system-ui;padding:24px"><h1>${request.url === "/next" ? "Next page" : "Browser isolation check"}</h1><p>A real page rendered in an isolated WebContentsView.</p><a href="/next">Next</a></body></html>`,
     );
   });
+  let tlsAttempts = 0;
+  server.on("clientError", (error, socket) => {
+    if (
+      "rawPacket" in error &&
+      Buffer.isBuffer(error.rawPacket) &&
+      error.rawPacket[0] === 22
+    )
+      tlsAttempts += 1;
+    socket.destroy();
+  });
   await new Promise<void>((ready) => server.listen(0, "127.0.0.1", ready));
   const address = server.address();
   if (!address || typeof address === "string")
@@ -44,6 +54,24 @@ test("embedded web pages are isolated and terminal links open in the right pane"
       .locator(".workbench-toolbar")
       .getByRole("button", { name: "브라우저", exact: true })
       .click();
+    await page
+      .getByRole("textbox", { name: "웹 주소", exact: true })
+      .fill(url.replace("http://", ""));
+    await page
+      .getByRole("region", { name: "내장 브라우저", exact: true })
+      .getByRole("button", { name: "이동", exact: true })
+      .click();
+    await expect.poll(() => tlsAttempts).toBeGreaterThan(0);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          async () => (await window.browser.snapshot()).tabs[0]?.phase,
+        ),
+      )
+      .toBe("error");
+    await expect(
+      page.getByRole("textbox", { name: "웹 주소", exact: true }),
+    ).toHaveValue(url.replace("http://", "https://"));
     await page.getByRole("textbox", { name: "웹 주소", exact: true }).fill(url);
     await page
       .getByRole("region", { name: "내장 브라우저", exact: true })
@@ -71,8 +99,15 @@ test("embedded web pages are isolated and terminal links open in the right pane"
         accounts: "desktop" in window,
         files: "workspace" in window,
         terminals: "terminal" in window,
+        appearance: "appearance" in window,
       })),
-    ).toEqual({ node: false, accounts: false, files: false, terminals: false });
+    ).toEqual({
+      node: false,
+      accounts: false,
+      files: false,
+      terminals: false,
+      appearance: false,
+    });
     await web.getByRole("link", { name: "Next", exact: true }).click();
     await expect(web.getByRole("heading", { name: "Next page" })).toBeVisible();
     await page
@@ -82,6 +117,22 @@ test("embedded web pages are isolated and terminal links open in the right pane"
     await expect(
       web.getByRole("heading", { name: "Browser isolation check" }),
     ).toBeVisible();
+    await web.evaluate(() => {
+      window.name = "theme-retained-browser";
+    });
+    for (const theme of ["light", "dark"]) {
+      await page
+        .getByRole("combobox", { name: "화면 테마" })
+        .selectOption(theme);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      expect(await web.evaluate(() => window.name)).toBe(
+        "theme-retained-browser",
+      );
+      await nativeCapture(
+        desktop,
+        `test-results/themes-browser-${theme}-native.png`,
+      );
+    }
     await page
       .getByRole("button", { name: "브라우저 패널 닫기", exact: true })
       .click();

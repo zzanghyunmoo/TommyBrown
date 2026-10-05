@@ -85,7 +85,7 @@
 .browser-host {
   flex: 1;
   min-height: 0;
-  background: white;
+  background: var(--paper);
 }
 .browser-status {
   display: flex;

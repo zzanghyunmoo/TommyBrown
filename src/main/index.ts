@@ -1,9 +1,19 @@
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { IpcMainInvokeEvent } from "electron";
-import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  nativeTheme,
+  session,
+  shell,
+} from "electron";
 import { z } from "zod";
+import { themeCanvas } from "../shared/appearance";
 import { browserGroupSchema } from "../shared/browser";
+import { AppearanceStore } from "./appearance";
 import { BrowserService } from "./browser/service";
 import { connectorProfile } from "./connectors/profiles";
 import { registerConnectors } from "./connectors/register";
@@ -31,10 +41,15 @@ else
 
 async function boot(): Promise<void> {
   await app.whenReady();
-  const models = await ModelService.create(app.getPath("userData"));
-  const spaces = await WorkspaceStore.open(
-    join(app.getPath("userData"), "workspace.json"),
-  );
+  const [appearance, models, spaces] = await Promise.all([
+    AppearanceStore.open(
+      join(app.getPath("userData"), "appearance.json"),
+      nativeTheme.shouldUseDarkColors ? "dark" : "light",
+    ),
+    ModelService.create(app.getPath("userData")),
+    WorkspaceStore.open(join(app.getPath("userData"), "workspace.json")),
+  ]);
+  nativeTheme.themeSource = appearance.get();
   const files = new WorkspaceFiles(spaces);
   const vaults = new VaultService(spaces, files, (url) =>
     shell.openExternal(url),
@@ -48,8 +63,9 @@ async function boot(): Promise<void> {
     height: 880,
     minWidth: 960,
     minHeight: 640,
-    backgroundColor: "#f7f6f3",
-    show: process.env["TOMMYBROWN_TEST"] !== "1",
+    backgroundColor: themeCanvas[appearance.get()],
+    autoHideMenuBar: true,
+    show: false,
     webPreferences: {
       preload: join(app.getAppPath(), "dist", "preload", "index.cjs"),
       sandbox: true,
@@ -57,6 +73,9 @@ async function boot(): Promise<void> {
       nodeIntegration: false,
       webSecurity: true,
     },
+  });
+  window.once("ready-to-show", () => {
+    if (process.env["TOMMYBROWN_TEST"] !== "1") window.show();
   });
   const workbench = new WorkbenchController(window);
   const browser = new BrowserService(window, (contents, group) =>
@@ -107,6 +126,13 @@ async function boot(): Promise<void> {
     bind,
     (id) => terminals.disconnectConnector(id),
   );
+  bind("appearance:get", () => appearance.get());
+  bind("appearance:set", async (input) => {
+    const theme = await appearance.set(input);
+    nativeTheme.themeSource = theme;
+    window.setBackgroundColor(themeCanvas[theme]);
+    return theme;
+  });
   const terminals = new TerminalService(
     spaces,
     (request) => models.launchProfile(request),

@@ -15,7 +15,7 @@ export function ModelAccess() {
       <main className="model-main">
         <div className="page-heading">
           <div>
-            <span className="eyebrow">YOUR MODELS, YOUR TOOLS</span>
+            <span className="eyebrow">연결 설정</span>
             <h1>모델 연결</h1>
             <p>사용 중인 계정의 모델을 다른 CLI에서도 선택하세요.</p>
           </div>
@@ -117,44 +117,43 @@ export function ModelAccess() {
             </div>
           )}
         </Panel>
+        <details className="connection-guide">
+          <summary>처음 연결하시나요? · 계정에서 CLI까지</summary>
+          <ol className="steps">
+            <li>
+              <span>01</span>
+              <div>
+                <h3>게이트웨이 시작</h3>
+                <p>한 번 설치하면 이 컴퓨터에서 실행됩니다.</p>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <h3>사용하는 계정 연결</h3>
+                <p>
+                  Claude, ChatGPT, Google 로그인은 각 제공자의 브라우저 화면에서
+                  진행합니다.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <h3>모델과 CLI 선택</h3>
+                <p>연결된 모델을 선택해 다른 CLI의 작업에도 사용합니다.</p>
+              </div>
+            </li>
+          </ol>
+          <div className="guide-note">
+            <h3>로컬 연결</h3>
+            <p>
+              계정 인증 정보는 이 컴퓨터에 보관됩니다. 모델 요청은 선택한
+              제공자에게 전달됩니다.
+            </p>
+          </div>
+        </details>
       </main>
-      <aside className="connection-guide">
-        <span className="eyebrow">GETTING CONNECTED</span>
-        <h2>계정에서 CLI까지</h2>
-        <ol className="steps">
-          <li>
-            <span>01</span>
-            <div>
-              <h3>게이트웨이 시작</h3>
-              <p>한 번 설치하면 이 컴퓨터에서 실행됩니다.</p>
-            </div>
-          </li>
-          <li>
-            <span>02</span>
-            <div>
-              <h3>사용하는 계정 연결</h3>
-              <p>
-                Claude, ChatGPT, Google 로그인은 각 제공자의 브라우저 화면에서
-                진행합니다.
-              </p>
-            </div>
-          </li>
-          <li>
-            <span>03</span>
-            <div>
-              <h3>모델과 CLI 선택</h3>
-              <p>연결된 모델을 선택해 다른 CLI의 작업에도 사용합니다.</p>
-            </div>
-          </li>
-        </ol>
-        <div className="guide-note">
-          <h3>로컬 연결</h3>
-          <p>
-            계정 인증 정보는 이 컴퓨터에 보관됩니다. 모델 요청은 선택한
-            제공자에게 전달됩니다.
-          </p>
-        </div>
-      </aside>
     </div>
   );
 }
