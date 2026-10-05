@@ -83,13 +83,13 @@ export class ModelService {
     this.installed = true;
   }
 
-  async start(): Promise<void> {
+  async start(port = 8317): Promise<void> {
     if (!(await this.installer.isInstalled()))
       throw new GatewayError(
         "integrity",
         "Install the verified gateway engine first.",
       );
-    await this.runtime.start();
+    await this.runtime.start(port);
   }
 
   async stop(): Promise<void> {

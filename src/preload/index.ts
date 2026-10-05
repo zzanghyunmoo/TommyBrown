@@ -3,6 +3,10 @@ import type { DesktopBridge } from "../shared/bridge";
 import type { BrowserBridge } from "../shared/browser";
 import type { ConnectorBridge } from "../shared/connectors";
 import { type TerminalBridge, terminalEventSchema } from "../shared/terminal";
+import {
+  type WorkbenchBridge,
+  workbenchEventSchema,
+} from "../shared/workbench";
 import type { WorkspaceBridge } from "../shared/workspace";
 
 const bridge: DesktopBridge = {
@@ -32,6 +36,18 @@ const workspace: WorkspaceBridge = {
 };
 contextBridge.exposeInMainWorld("workspace", workspace);
 
+const workbench: WorkbenchBridge = {
+  enable: (enabled) => ipcRenderer.invoke("workbench:enable", enabled),
+  reset: () => ipcRenderer.invoke("workbench:reset"),
+  onEvent: (callback) => {
+    const listener = (_event: unknown, value: unknown) =>
+      callback(workbenchEventSchema.parse(value));
+    ipcRenderer.on("workbench:event", listener);
+    return () => ipcRenderer.removeListener("workbench:event", listener);
+  },
+};
+contextBridge.exposeInMainWorld("workbench", workbench);
+
 const terminal: TerminalBridge = {
   launch: (request) => ipcRenderer.invoke("terminal:launch", request),
   list: () => ipcRenderer.invoke("terminal:list"),
@@ -52,11 +68,12 @@ const terminal: TerminalBridge = {
 contextBridge.exposeInMainWorld("terminal", terminal);
 
 const browser: BrowserBridge = {
-  snapshot: () => ipcRenderer.invoke("browser:snapshot"),
-  open: (url, connectorId) =>
+  snapshot: (group) => ipcRenderer.invoke("browser:snapshot", group),
+  open: (url, connectorId, group) =>
     ipcRenderer.invoke("browser:open", {
       url,
       connectorId: connectorId ?? null,
+      group: group ?? "browser",
     }),
   navigate: (id, url) => ipcRenderer.invoke("browser:navigate", { id, url }),
   select: (id) => ipcRenderer.invoke("browser:select", id),
@@ -69,7 +86,8 @@ const connectors: ConnectorBridge = {
   list: () => ipcRenderer.invoke("connectors:list"),
   add: (input) => ipcRenderer.invoke("connectors:add", input),
   disconnect: (id) => ipcRenderer.invoke("connectors:disconnect", id),
-  open: (id) => ipcRenderer.invoke("connectors:open", id),
+  open: (id, group) =>
+    ipcRenderer.invoke("connectors:open", { id, group: group ?? "browser" }),
   check: (id) => ipcRenderer.invoke("connectors:check", id),
   call: (input) => ipcRenderer.invoke("connectors:call", input),
 };

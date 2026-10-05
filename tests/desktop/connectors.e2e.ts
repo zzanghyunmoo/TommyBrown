@@ -75,9 +75,7 @@ test("connector screens use separate persistent sessions and disconnect clears l
     await panel
       .getByRole("button", { name: "웹 화면 열기", exact: true })
       .click();
-    await expect(
-      page.getByRole("region", { name: "내장 브라우저" }),
-    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "앱 화면" })).toBeVisible();
     await expect
       .poll(() =>
         desktop
@@ -113,14 +111,12 @@ test("connector screens use separate persistent sessions and disconnect clears l
   const reopened = await electron.launch(options);
   try {
     const page = await desktopWindow(reopened);
-    await expect(
-      page.getByRole("region", { name: "내장 브라우저" }),
-    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "앱 화면" })).toBeVisible();
     await expect
       .poll(() =>
         page.evaluate(() =>
           window.browser
-            .snapshot()
+            .snapshot("app")
             .then((state) => state.tabs.map((tab) => tab.connectorId)),
         ),
       )

@@ -1,6 +1,7 @@
 import {
   CubeIcon,
   GearIcon,
+  HamburgerMenuIcon,
   LockClosedIcon,
   PlusIcon,
 } from "@radix-ui/react-icons";
@@ -20,10 +21,20 @@ const WorkspaceView = lazy(() =>
 export function App() {
   const spaces = useSpaces();
   const terminals = useTerminals();
+  const [sidebarHidden, setSidebarHidden] = useState(
+    () => readViewState().sidebarHidden,
+  );
   const [page, setPage] = useState<"models" | "workspace" | null>(
     () => readViewState().page,
   );
   const [settingsError, setSettingsError] = useState<string>();
+  useEffect(() => {
+    try {
+      saveViewState({ sidebarHidden });
+    } catch (failure) {
+      if (failure instanceof Error) setSettingsError(failure.message);
+    }
+  }, [sidebarHidden]);
   useEffect(() => {
     try {
       saveViewState({ page });
@@ -37,8 +48,12 @@ export function App() {
     if (state?.selectedSpace) setPage("workspace");
   }
   return (
-    <div className="app-shell">
-      <aside className="sidebar" aria-label="TommyBrown 탐색">
+    <div className={`app-shell ${sidebarHidden ? "sidebar-hidden" : ""}`}>
+      <aside
+        className="sidebar"
+        aria-label="TommyBrown 탐색"
+        hidden={sidebarHidden}
+      >
         <div className="brand">
           <span className="monogram">TB</span>
           <strong>TommyBrown</strong>
@@ -135,6 +150,14 @@ export function App() {
       </aside>
       <div className="workspace">
         <header className="workspace-header">
+          <Button
+            tone="quiet"
+            aria-label="사이드바 표시 전환"
+            aria-pressed={!sidebarHidden}
+            onClick={() => setSidebarHidden((hidden) => !hidden)}
+          >
+            <HamburgerMenuIcon />
+          </Button>
           <span>{screen === "models" ? "설정" : "작업 공간"}</span>
           <span className="header-separator">/</span>
           <strong>
@@ -177,7 +200,20 @@ export function App() {
                   </p>
                 }
               >
-                <WorkspaceView space={spaces.selected} terminals={terminals} />
+                <WorkspaceView
+                  space={spaces.selected}
+                  spaces={spaces.state?.spaces ?? []}
+                  terminals={terminals}
+                  visible={screen === "workspace"}
+                  toggleSidebar={() => setSidebarHidden((hidden) => !hidden)}
+                  openSpace={() => {
+                    void choose("workspace");
+                  }}
+                  selectSpace={(id) => {
+                    void spaces.select(id);
+                    setPage("workspace");
+                  }}
+                />
               </Suspense>
             </div>
           )}

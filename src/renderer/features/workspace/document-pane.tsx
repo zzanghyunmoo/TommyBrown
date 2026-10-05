@@ -1,20 +1,30 @@
 import { Cross2Icon, EyeOpenIcon, FileTextIcon } from "@radix-ui/react-icons";
-import { useEffect, useRef, useState } from "react";
+import {
+  type Ref,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Space } from "../../../shared/workspace";
 import { Button, Notice } from "../../components/primitives";
 import { CodeEditor } from "./code-editor";
 import { FileTree } from "./file-tree";
+import type { PaneHandle } from "./pane-handle";
 import { type Draft, keyOf, useDocumentRestore } from "./use-document-restore";
 
 export function DocumentPane({
   space,
   openUrl,
+  ref,
 }: {
   readonly space: Space;
   readonly openUrl: (url: string) => void;
+  readonly ref?: Ref<PaneHandle>;
 }) {
+  const host = useRef<HTMLDivElement>(null);
   const {
     documents,
     setDocuments,
@@ -101,8 +111,37 @@ export function DocumentPane({
       previous.filter((candidate) => keyOf(candidate) !== keyOf(doc)),
     );
   }
+  function focus() {
+    const element =
+      host.current?.querySelector<HTMLElement>(".monaco-editor textarea") ??
+      host.current?.querySelector<HTMLElement>(".markdown-preview") ??
+      host.current?.querySelector<HTMLElement>("button");
+    element?.focus();
+  }
+  function selectTab(index: number) {
+    const doc = visible[index];
+    if (doc) {
+      setSelected(keyOf(doc));
+      requestAnimationFrame(focus);
+    }
+  }
+  useImperativeHandle(ref, () => ({
+    focus,
+    newTab: () =>
+      host.current?.querySelector<HTMLButtonElement>("button")?.focus(),
+    closeTab: () => {
+      if (current) close(current);
+    },
+    selectTab,
+    cycleTab: (offset) => {
+      if (current)
+        selectTab(
+          (visible.indexOf(current) + offset + visible.length) % visible.length,
+        );
+    },
+  }));
   return (
-    <div className="document-pane">
+    <div ref={host} className="document-pane">
       <FileTree
         key={space.id}
         space={space}
@@ -164,7 +203,7 @@ export function DocumentPane({
               </Button>
             </div>
             {preview && /\.mdx?$/i.test(current.path) ? (
-              <article className="markdown-preview">
+              <article className="markdown-preview" tabIndex={-1}>
                 <Markdown
                   remarkPlugins={[remarkGfm]}
                   skipHtml

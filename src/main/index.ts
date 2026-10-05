@@ -3,11 +3,13 @@ import { pathToFileURL } from "node:url";
 import type { IpcMainInvokeEvent } from "electron";
 import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
 import { z } from "zod";
+import { browserGroupSchema } from "../shared/browser";
 import { BrowserService } from "./browser/service";
 import { connectorProfile } from "./connectors/profiles";
 import { registerConnectors } from "./connectors/register";
 import { ModelService } from "./models";
 import { TerminalService } from "./terminal/service";
+import { WorkbenchController } from "./workbench/controller";
 import { WorkspaceFiles } from "./workspace/files";
 import { WorkspaceStore } from "./workspace/store";
 import { VaultService } from "./workspace/vault";
@@ -56,7 +58,10 @@ async function boot(): Promise<void> {
       webSecurity: true,
     },
   });
-  const browser = new BrowserService(window);
+  const workbench = new WorkbenchController(window);
+  const browser = new BrowserService(window, (contents, group) =>
+    workbench.attach(contents, group),
+  );
   function authorize(event: IpcMainInvokeEvent): void {
     if (
       event.sender !== window.webContents ||
@@ -112,8 +117,14 @@ async function boot(): Promise<void> {
     (cli, ids) => connectorProfile(connectors, cli, ids),
   );
   bind("models:snapshot", () => models.snapshot());
+  bind("workbench:enable", (input) =>
+    workbench.enable(z.boolean().parse(input)),
+  );
+  bind("workbench:reset", () => workbench.reset());
   bind("models:install", () => models.install());
-  bind("models:start", () => models.start());
+  bind("models:start", () =>
+    models.start(process.env["TOMMYBROWN_TEST"] === "1" ? 0 : 8317),
+  );
   bind("models:stop", () => models.stop());
   bind("models:login", (input) => models.login(input));
   bind("models:login-status", (input) =>
@@ -154,13 +165,19 @@ async function boot(): Promise<void> {
   bind("terminal:write", (input) => terminals.write(input));
   bind("terminal:resize", (input) => terminals.resize(input));
   bind("terminal:close", (input) => terminals.close(z.uuid().parse(input)));
-  bind("browser:snapshot", () => browser.snapshot());
+  bind("browser:snapshot", (input) =>
+    browser.snapshot(browserGroupSchema.default("browser").parse(input)),
+  );
   bind("browser:open", (input) => {
     const request = z
-      .object({ url: z.string(), connectorId: z.uuid().nullable() })
+      .object({
+        url: z.string(),
+        connectorId: z.uuid().nullable(),
+        group: browserGroupSchema.default("browser"),
+      })
       .parse(input);
     if (request.connectorId) connectors.require(request.connectorId);
-    return browser.open(request.url, request.connectorId);
+    return browser.open(request.url, request.connectorId, request.group);
   });
   bind("browser:navigate", (input) => browser.navigate(input));
   bind("browser:select", (input) => browser.select(z.uuid().parse(input)));

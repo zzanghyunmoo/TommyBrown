@@ -84,8 +84,14 @@ export function TerminalView({
         host.current &&
         host.current.clientWidth > 0 &&
         host.current.clientHeight > 0
-      )
-        fit.fit();
+      ) {
+        const dimensions = fit.proposeDimensions();
+        if (dimensions)
+          terminal.resize(
+            Math.max(2, Math.min(1000, dimensions.cols)),
+            Math.max(2, Math.min(300, dimensions.rows)),
+          );
+      }
     });
     observer.observe(host.current);
     return () => {

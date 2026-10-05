@@ -29,6 +29,7 @@ No decorative charts, fabricated usage statistics, marketing hero, or sample age
 | --surface | #ffffff | Controls and selected tabs |
 | --wash | #eeece6 | Hover and selected rows |
 | --ink | #292825 | Primary text |
+| --backdrop | #29282566 | Modal backdrop |
 | --muted | #6b6a64 | Secondary text |
 | --line | #e2dfd7 | Structural dividers |
 | --accent | #805035 | Primary action background |
@@ -64,6 +65,18 @@ pane have independent bounded scroll jobs. Grid children use min-width/min-heigh
 Below 1100px, supporting content stacks after primary content. Below 700px, the sidebar
 becomes a top navigation band for small-window inspection; main content never overflows.
 
+The simultaneous workbench replaces that support-pane stacking rule: terminal on the
+left (48%), browser above app on the right (50/50). A bounded split tree places stable
+pane elements without remounting their contents. Each leaf owns its scroll; the canvas,
+pane title, toolbar, and splitter stay fixed. Splitter hit area is 8px with a neutral
+1px center rule. Splits clamp to 20-80%; pane creation also respects a usable minimum
+of 240px by 160px. At the native 960px minimum window, the sidebar can be hidden.
+Zoom temporarily fills the canvas without deleting other panes or stopping sessions.
+When a pane body is at most 240px tall, its controls use a 28px compact height,
+hide redundant visual field labels (accessible names remain), and reduce tab padding.
+Browser controls stay on one row with bounded horizontal overflow at extreme widths.
+Terminal fitting clamps its grid to the IPC contract even during a tiny resize.
+
 ## 5. Components
 
 - **Button**: primary/secondary/quiet; optional icon; disabled/busy/hover/pressed/focus.
@@ -80,6 +93,12 @@ becomes a top navigation band for small-window inspection; main content never ov
 - **Tab**: role tab, selected background, label and close button with independent accessible
   name. Arrow keys move between peers. Dirty documents have an explicit unsaved indicator.
 - **Notice**: inline failure or explanatory message; wrapping text and a recovery action.
+- **Workbench pane**: compact 36px title row, kind label, focused glyph and wash,
+  zoom/close actions, and a bounded body. Browser and application tab groups are independent.
+- **Splitter**: pointer drag with capture, keyboard arrows in 5% steps, Home/End limits,
+  and a labelled separator with current size. Continuous resize follows input without motion.
+- **Shortcut help**: searchable key/action rows in a keyboard-dismissable dialog. Native
+  web views hide while the dialog is open and return when it closes; focus returns to the pane.
 
 A development component showcase exercises shared states before composing product screens.
 
@@ -89,6 +108,11 @@ A development component showcase exercises shared states before composing produc
 legibility. Asynchronous actions show a busy label immediately. No layout animation under
 the pointer. Reduced motion removes positional motion. Errors remain visible until retry
 or dismissal; confirmation comes from changed data rather than arbitrary success toasts.
+
+Herdr's Ctrl+B prefix governs workbench commands across local and remote content.
+Prefix/resize mode is shown as text in the workbench bar. Escape cancels. Splitter
+gestures and focus movement are immediate; reduced motion requires no alternate layout.
+This is a desktop-specific keyboard/splitter mechanism, not a decorative animation.
 
 ## 7. Depth & Surface
 

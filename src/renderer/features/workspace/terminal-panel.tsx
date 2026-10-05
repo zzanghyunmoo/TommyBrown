@@ -1,9 +1,16 @@
 import { Cross2Icon, PlusIcon } from "@radix-ui/react-icons";
-import { useEffect, useState } from "react";
+import {
+  type Ref,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import type { ProxyModel } from "../../../shared/proxy";
 import { terminalLaunchSchema } from "../../../shared/terminal";
 import type { Space } from "../../../shared/workspace";
 import { Button, Notice } from "../../components/primitives";
+import type { PaneHandle } from "./pane-handle";
 import { TerminalConnectors } from "./terminal-connectors";
 import { TerminalView } from "./terminal-view";
 import type { useTerminals } from "./use-terminals";
@@ -12,11 +19,15 @@ export function TerminalPanel({
   space,
   terminals,
   openUrl,
+  ref,
 }: {
   readonly space: Space;
   readonly terminals: ReturnType<typeof useTerminals>;
   readonly openUrl: (url: string) => void;
+  readonly ref?: Ref<PaneHandle>;
 }) {
+  const host = useRef<HTMLElement>(null);
+  const [selected, setSelected] = useState<string>();
   const [cli, setCli] = useState("powershell");
   const [model, setModel] = useState("");
   const [connectors, setConnectors] = useState<readonly string[]>([]);
@@ -26,8 +37,59 @@ export function TerminalPanel({
     (session) => session.spaceId === space.id,
   );
   const current =
-    sessions.find((session) => session.id === terminals.selected) ??
-    sessions[0];
+    sessions.find((session) => session.id === selected) ?? sessions[0];
+  useEffect(() => {
+    if (sessions.some((session) => session.id === terminals.selected))
+      setSelected(terminals.selected);
+  }, [sessions, terminals.selected]);
+  function focus() {
+    host.current
+      ?.querySelector<HTMLTextAreaElement>(
+        ".terminal-slot:not([hidden]) textarea",
+      )
+      ?.focus();
+  }
+  async function launch() {
+    const session = await terminals.launch(
+      terminalLaunchSchema.parse({
+        spaceId: space.id,
+        cli,
+        model: cli === "powershell" || !model ? null : model,
+        connectors: cli === "powershell" ? [] : connectors,
+      }),
+    );
+    if (session) {
+      setSelected(session.id);
+      requestAnimationFrame(focus);
+    }
+  }
+  function selectTab(index: number) {
+    const session = sessions[index];
+    if (session) {
+      setSelected(session.id);
+      terminals.setSelected(session.id);
+      requestAnimationFrame(focus);
+    }
+  }
+  useImperativeHandle(ref, () => ({
+    focus,
+    newTab: () => {
+      void launch();
+    },
+    closeTab: () => {
+      if (current) void terminals.close(current.id);
+    },
+    selectTab,
+    cycleTab: (offset) => {
+      if (sessions.length)
+        selectTab(
+          (sessions.findIndex((session) => session.id === current?.id) +
+            offset +
+            sessions.length) %
+            sessions.length,
+        );
+    },
+  }));
   useEffect(() => {
     let active = true;
     window.desktop
@@ -43,7 +105,7 @@ export function TerminalPanel({
     };
   }, []);
   return (
-    <section className="terminal-panel" aria-label="에이전트 터미널">
+    <section ref={host} className="terminal-panel" aria-label="에이전트 터미널">
       <div className="terminal-launch">
         <label>
           CLI
@@ -87,14 +149,7 @@ export function TerminalPanel({
         <Button
           busy={terminals.busy}
           onClick={() => {
-            void terminals.launch(
-              terminalLaunchSchema.parse({
-                spaceId: space.id,
-                cli,
-                model: cli === "powershell" || !model ? null : model,
-                connectors: cli === "powershell" ? [] : connectors,
-              }),
-            );
+            void launch();
           }}
           aria-label="새 세션"
         >
@@ -115,7 +170,7 @@ export function TerminalPanel({
               type="button"
               role="tab"
               aria-selected={session.id === current?.id}
-              onClick={() => terminals.setSelected(session.id)}
+              onClick={() => selectTab(index)}
             >
               {session.cli} {index + 1}
               {session.phase === "exited" ? ` · 종료 ${session.exitCode}` : ""}
