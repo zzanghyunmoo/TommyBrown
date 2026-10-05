@@ -67,7 +67,7 @@ export interface ConnectorBridge {
   readonly list: () => Promise<readonly Connector[]>;
   readonly add: (input: ConnectorInput) => Promise<readonly Connector[]>;
   readonly disconnect: (id: string) => Promise<readonly Connector[]>;
-  readonly open: (id: string) => Promise<BrowserState>;
+  readonly open: (id: string, group?: string) => Promise<BrowserState>;
   readonly check: (id: string) => Promise<ConnectorCheck>;
   readonly call: (
     input: z.infer<typeof connectorCallSchema>,

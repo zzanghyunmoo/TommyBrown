@@ -7,6 +7,7 @@ import "./documents.css";
 import "./terminals.css";
 import "./browser.css";
 import "./connectors.css";
+import "./workbench.css";
 
 if (import.meta.env.DEV) {
   void import("react-grab");

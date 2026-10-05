@@ -33,6 +33,10 @@ by CLIProxyAPI and are not encrypted by TommyBrown itself.
 
 ## Workspace and connectors
 
+- Keep a terminal, browser, and app visible together. Drag the dividers, split more
+  terminal panes, or zoom one pane; active sessions keep running. The app pane opens
+  localhost web apps and connected web services, with code/documents and connectors
+  available in its tool tabs. It does not embed arbitrary Windows application windows.
 - Open a folder as a space. Run PowerShell, Claude Code, or Codex in real terminals.
   Terminal sessions stay alive when switching tabs and stop when closed or the app exits.
 - Browse, edit, and save text in the right pane. Markdown has an offline preview.
@@ -50,10 +54,34 @@ by CLIProxyAPI and are not encrypted by TommyBrown itself.
   The Obsidian button opens the installed local app. Vault use does not require Sync
   or upload notes; remote images are suppressed in previews.
 
-Spaces, document/browser tab selection, view settings, and connector definitions restore
+Spaces, each space's pane layout, independent browser/app tabs, document selection,
+view settings, and connector definitions restore
 after restart. Save drafts before quitting. Running processes and terminal output do not
 resume after an application restart. Disconnecting a connector stops terminals using it
 and removes its local definition, stored token, and embedded browser session.
+
+## Workbench shortcuts
+
+Press `Ctrl+B`, release it, then press the action key. These match Herdr's bindings
+for the supported workbench actions and work inside embedded web pages as well.
+
+| Key after Ctrl+B | Action |
+| --- | --- |
+| `c` | New tab or terminal session in the focused pane |
+| `v` / `-` | Split a terminal to the right / below |
+| `h` / `j` / `k` / `l` | Focus left / down / up / right |
+| `H` / `J` / `K` / `L` | Swap with the neighboring pane |
+| `z` | Zoom / restore the focused pane |
+| `r` | Resize with h/j/k/l or arrows; Enter/Escape finishes |
+| `x` / `X` | Close the pane / active tab |
+| `n` / `p` / `1`-`9` | Next / previous / numbered tab |
+| `b` / `w` / `g` | Toggle sidebar / find workspace / find session |
+| `N` / `?` | Open a workspace / searchable shortcut help |
+
+Press `Ctrl+B` twice to send one literal Ctrl+B to the client. Escape cancels a
+pending prefix. Herdr's detached server, worktree commands, and copy-mode editor
+are not part of this workbench. Layouts allow up to eight panes and sixteen web
+tabs total; closing a terminal pane confirms before ending its running sessions.
 
 ## Windows package
 
@@ -67,6 +95,10 @@ an unsigned Windows x64 development build, not an installer or an auto-updating 
 Other operating systems and architectures have not been validated.
 
 ## Development status and verification
+
+The simultaneous workbench and Herdr-compatible pane shortcuts are verified in a
+Windows package. See the [workbench checkpoint](docs/verification/2026-10-05-simultaneous-workbench.md)
+for native captures, restart behavior, compact-window validation, and scope.
 
 The gateway, ADE, connectors, offline vault, and Windows package are implemented.
 An OpenAI account connected by the owner has served real Codex and Claude Code

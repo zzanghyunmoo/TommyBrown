@@ -37,6 +37,7 @@ test("choose a real space, preserve drafts across tabs, save and detect conflict
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
+    await page.getByRole("button", { name: "코드·문서", exact: true }).click();
     await page.getByRole("button", { name: "note.md", exact: true }).click();
     const editor = page.getByRole("textbox", { name: /문서 편집기 note.md/ });
     await expect(editor).toBeVisible();

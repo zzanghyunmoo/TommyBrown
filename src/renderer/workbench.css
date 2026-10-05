@@ -1,0 +1,317 @@
+.app-shell.sidebar-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+.sidebar[hidden] {
+  display: none;
+}
+.workbench {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  background: var(--paper);
+}
+.workbench-toolbar,
+.workbench-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  min-width: 0;
+}
+.workbench-toolbar {
+  padding: var(--s1) var(--s2);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  background: var(--canvas);
+}
+.workbench-toolbar .button {
+  padding: var(--s2);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+.toolbar-divider {
+  height: 20px;
+  border-left: 1px solid var(--line);
+  margin: 0 var(--s1);
+}
+.key-mode {
+  margin-left: auto;
+  color: var(--muted);
+  font:
+    var(--text-xs) Consolas,
+    monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.workbench-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.workbench-pane {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.workbench-pane[hidden] {
+  display: none;
+}
+.workbench-pane-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--line);
+}
+.workbench-pane[data-focused="true"] > .workbench-pane-header {
+  background: var(--wash);
+}
+.workbench-pane-header .button {
+  min-height: 32px;
+  padding: var(--s2);
+  border-radius: 0;
+}
+.pane-focus {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  padding: 0 var(--s3);
+  cursor: pointer;
+  font-size: var(--text-xs);
+}
+.pane-focus strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pane-focus-mark {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.workbench-pane-body {
+  container-type: size;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.workbench-pane-body > .terminal-panel,
+.workbench-pane-body > .right-workspace {
+  height: 100%;
+  border-right: 0;
+}
+.workbench-pane .terminal-launch {
+  padding: var(--s2);
+}
+.workbench-pane .terminal-empty,
+.workbench-pane .editor-empty {
+  padding: var(--s4);
+}
+.workbench-pane .terminal-tabs,
+.workbench-pane .browser-tabs {
+  min-height: 36px;
+}
+.workbench-pane .terminal-tab button {
+  padding: var(--s2);
+}
+.workbench-pane .browser-toolbar {
+  flex-wrap: nowrap;
+  padding: var(--s1);
+  overflow-x: auto;
+}
+.workbench-pane .browser-toolbar .button {
+  min-height: 28px;
+  padding: var(--s1);
+  font-size: var(--text-xs);
+}
+.workbench-pane .browser-toolbar input {
+  flex: 1 1 60px;
+  width: 60px;
+  min-width: 48px;
+}
+.workbench-pane .document-pane {
+  grid-template-columns: 144px minmax(0, 1fr);
+}
+.workbench-pane .right-pane-tabs {
+  height: 36px;
+  overflow-x: auto;
+}
+.workbench-pane .right-pane-tabs button {
+  padding: var(--s2) var(--s3);
+  white-space: nowrap;
+}
+.workbench-pane .right-pane-tabs [aria-pressed="true"] {
+  border-bottom: 0;
+  background: var(--wash);
+  font-weight: 600;
+}
+.workbench-splitter {
+  margin: 0;
+  border: 0;
+  position: absolute;
+  z-index: 2;
+  background: transparent;
+  touch-action: none;
+}
+.workbench-splitter.vertical {
+  width: 8px;
+  margin-left: -4px;
+  cursor: col-resize;
+}
+.workbench-splitter.horizontal {
+  height: 8px;
+  margin-top: -4px;
+  cursor: row-resize;
+}
+.workbench-splitter:hover,
+.workbench-splitter:focus-visible {
+  background: var(--wash);
+}
+.workbench-error {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-shrink: 0;
+}
+.workbench-error .notice {
+  flex: 1;
+}
+.workbench-dialog {
+  width: min(560px, calc(100vw - 48px));
+  max-height: calc(100dvh - 96px);
+  padding: var(--s6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--paper);
+  color: var(--ink);
+}
+.workbench-dialog::backdrop {
+  background: var(--backdrop);
+}
+.workbench-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+.workbench-dialog h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+.workbench-dialog > p {
+  font-size: var(--text-xs);
+  margin-block: var(--s3);
+}
+.workbench-dialog > input[aria-label] {
+  width: 100%;
+  margin-block: var(--s3);
+}
+.workbench-dialog-list {
+  max-height: 50dvh;
+  overflow-y: auto;
+}
+.workbench-dialog dl {
+  margin: 0;
+}
+.workbench-dialog dl > div {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  padding: var(--s2);
+  border-bottom: 1px solid var(--line);
+}
+.workbench-dialog dd {
+  margin: 0;
+}
+.workbench-dialog kbd {
+  font:
+    var(--text-xs) Consolas,
+    monospace;
+  background: var(--wash);
+  border-radius: var(--radius-sm);
+  padding: var(--s1) var(--s2);
+}
+.workbench-choice {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s3);
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+}
+.workbench-choice:hover {
+  background: var(--wash);
+}
+.workbench-choice small {
+  color: var(--muted);
+}
+@container (max-height: 240px) {
+  .workbench-pane .terminal-launch {
+    padding: var(--s1);
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .terminal-launch label {
+    font-size: 0;
+    gap: 0;
+  }
+  .terminal-launch select {
+    font-size: var(--text-xs);
+    height: 28px;
+  }
+  .terminal-launch .button {
+    min-height: 28px;
+    padding: var(--s1) var(--s2);
+  }
+  .terminal-connectors {
+    padding: var(--s1) var(--s2);
+    max-height: 80px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .workbench-pane .terminal-tabs,
+  .workbench-pane .browser-tabs {
+    min-height: 28px;
+  }
+  .workbench-pane .terminal-tab button,
+  .browser-tab button,
+  .workbench-pane .right-pane-tabs button {
+    padding: var(--s1) var(--s2);
+  }
+  .workbench-pane .right-pane-tabs {
+    height: 28px;
+  }
+  .browser-status {
+    padding: var(--s1);
+    flex-wrap: nowrap;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+@media (max-width: 1100px) {
+  .workbench-toolbar .key-mode {
+    max-width: 160px;
+  }
+}

@@ -5,12 +5,14 @@ import {
   type BrowserState,
   type BrowserTab,
   browserBoundsSchema,
+  browserGroupSchema,
   browserUrl,
 } from "../../shared/browser";
 import { browserSession } from "./session";
 
 type Tab = {
   readonly id: string;
+  readonly group: string;
   readonly connectorId: string | null;
   readonly view: WebContentsView;
   url: string;
@@ -21,27 +23,41 @@ type Tab = {
 
 export class BrowserService {
   private readonly tabs = new Map<string, Tab>();
-  private selected: string | null = null;
-  constructor(private readonly window: BrowserWindow) {}
+  private readonly selected = new Map<string, string>();
+  constructor(
+    private readonly window: BrowserWindow,
+    private readonly onContents?: (
+      contents: Electron.WebContents,
+      group: string,
+    ) => void,
+  ) {}
 
-  snapshot(): BrowserState {
+  snapshot(group = "browser"): BrowserState {
     return {
-      selected: this.selected,
-      tabs: [...this.tabs.values()].map((tab) => ({
-        id: tab.id,
-        connectorId: tab.connectorId,
-        url: tab.url,
-        title: tab.title,
-        phase: tab.phase,
-        error: tab.error,
-        back: tab.view.webContents.navigationHistory.canGoBack(),
-        forward: tab.view.webContents.navigationHistory.canGoForward(),
-      })),
+      selected: this.selected.get(group) ?? null,
+      tabs: [...this.tabs.values()]
+        .filter((tab) => tab.group === group)
+        .map((tab) => ({
+          id: tab.id,
+          group: tab.group,
+          connectorId: tab.connectorId,
+          url: tab.url,
+          title: tab.title,
+          phase: tab.phase,
+          error: tab.error,
+          back: tab.view.webContents.navigationHistory.canGoBack(),
+          forward: tab.view.webContents.navigationHistory.canGoForward(),
+        })),
     };
   }
 
-  open(input: unknown, connectorId: string | null = null): BrowserState {
+  open(
+    input: unknown,
+    connectorId: string | null = null,
+    inputGroup = "browser",
+  ): BrowserState {
     const url = browserUrl(input);
+    const group = browserGroupSchema.parse(inputGroup);
     if (this.tabs.size >= 16)
       throw new Error("Close a browser tab before opening another (limit 16).");
     const view = new WebContentsView({
@@ -56,6 +72,7 @@ export class BrowserService {
     const id = randomUUID();
     const tab: Tab = {
       id,
+      group,
       connectorId,
       view,
       url,
@@ -66,9 +83,10 @@ export class BrowserService {
     this.tabs.set(id, tab);
     this.window.contentView.addChildView(view);
     view.setVisible(false);
+    this.onContents?.(view.webContents, group);
     view.webContents.setWindowOpenHandler(({ url: next }) => {
       try {
-        this.open(next, connectorId);
+        this.open(next, connectorId, group);
       } catch {
         tab.error = "This page tried to open an unsupported address.";
       }
@@ -113,39 +131,48 @@ export class BrowserService {
     );
     this.select(id);
     this.load(tab, url);
-    return this.snapshot();
+    return this.snapshot(group);
   }
 
   navigate(input: unknown): BrowserState {
     const request = z.object({ id: z.uuid(), url: z.string() }).parse(input);
-    this.load(this.require(request.id), browserUrl(request.url));
-    return this.snapshot();
+    const tab = this.require(request.id);
+    this.load(tab, browserUrl(request.url));
+    return this.snapshot(tab.group);
   }
   select(id: string): BrowserState {
-    this.require(id);
-    if (this.selected === id) return this.snapshot();
-    this.selected = id;
-    for (const tab of this.tabs.values()) tab.view.setVisible(false);
-    return this.snapshot();
+    const selected = this.require(id);
+    if (this.selected.get(selected.group) === id)
+      return this.snapshot(selected.group);
+    this.selected.set(selected.group, id);
+    for (const tab of this.tabs.values())
+      if (tab.group === selected.group) tab.view.setVisible(false);
+    return this.snapshot(selected.group);
   }
   close(id: string): BrowserState {
     const tab = this.require(id);
     this.window.contentView.removeChildView(tab.view);
     tab.view.webContents.close();
     this.tabs.delete(id);
-    if (this.selected === id)
-      this.selected = this.tabs.keys().next().value ?? null;
-    return this.snapshot();
+    if (this.selected.get(tab.group) === id) {
+      const next = [...this.tabs.values()].find(
+        (item) => item.group === tab.group,
+      );
+      if (next) this.selected.set(tab.group, next.id);
+      else this.selected.delete(tab.group);
+    }
+    return this.snapshot(tab.group);
   }
   async action(input: unknown): Promise<void> {
     const request = z
       .object({
         id: z.uuid(),
-        action: z.enum(["back", "forward", "reload", "external"]),
+        action: z.enum(["back", "forward", "reload", "external", "focus"]),
       })
       .parse(input);
     const tab = this.require(request.id);
     const contents = tab.view.webContents;
+    if (request.action === "focus" && tab.view.getVisible()) contents.focus();
     if (request.action === "back" && contents.navigationHistory.canGoBack())
       contents.navigationHistory.goBack();
     if (
@@ -166,7 +193,7 @@ export class BrowserService {
     const tab = this.require(id);
     if (
       !rectangle ||
-      id !== this.selected ||
+      id !== this.selected.get(tab.group) ||
       rectangle.width < 10 ||
       rectangle.height < 10
     ) {

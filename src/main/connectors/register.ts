@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { safeStorage } from "electron";
 import { z } from "zod";
+import { browserGroupSchema } from "../../shared/browser";
 import type { BrowserService } from "../browser/service";
 import { ConnectorMcp } from "./mcp";
 import { ConnectorStore } from "./store";
@@ -24,8 +25,11 @@ export async function registerConnectors(
   bind("connectors:list", () => store.list());
   bind("connectors:add", (input) => store.add(input));
   bind("connectors:open", (input) => {
-    const connector = store.require(input);
-    return browser.open(connector.webUrl, connector.id);
+    const request = z
+      .object({ id: z.uuid(), group: browserGroupSchema })
+      .parse(input);
+    const connector = store.require(request.id);
+    return browser.open(connector.webUrl, connector.id, request.group);
   });
   bind("connectors:disconnect", async (input) => {
     const id = store.require(input).id;

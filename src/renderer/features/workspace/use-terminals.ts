@@ -3,7 +3,9 @@ import type { TerminalInfo, TerminalLaunch } from "../../../shared/terminal";
 
 export function useTerminals() {
   const [sessions, setSessions] = useState<readonly TerminalInfo[]>([]);
-  const [selected, setSelected] = useState<string>();
+  const [selection, setSelection] = useState<{ readonly id: string }>();
+  const selected = selection?.id;
+  const setSelected = useCallback((id: string) => setSelection({ id }), []);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const refresh = useCallback(
@@ -36,6 +38,7 @@ export function useTerminals() {
       const session = await window.terminal.launch(request);
       setSelected(session.id);
       await refresh();
+      return session;
     } catch (failure) {
       if (failure instanceof Error) setError(failure.message);
     } finally {
@@ -47,9 +50,20 @@ export function useTerminals() {
     try {
       await window.terminal.close(id);
       await refresh();
+      return true;
     } catch (failure) {
       if (failure instanceof Error) setError(failure.message);
+      return false;
     }
   }
-  return { sessions, selected, setSelected, error, busy, launch, close };
+  return {
+    sessions,
+    selected,
+    selection,
+    setSelected,
+    error,
+    busy,
+    launch,
+    close,
+  };
 }

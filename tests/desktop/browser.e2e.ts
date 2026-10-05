@@ -40,9 +40,15 @@ test("embedded web pages are isolated and terminal links open in the right pane"
     }, project);
     const page = await desktopWindow(desktop);
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
-    await page.getByRole("button", { name: "브라우저", exact: true }).click();
+    await page
+      .locator(".workbench-toolbar")
+      .getByRole("button", { name: "브라우저", exact: true })
+      .click();
     await page.getByRole("textbox", { name: "웹 주소", exact: true }).fill(url);
-    await page.getByRole("button", { name: "이동", exact: true }).click();
+    await page
+      .getByRole("region", { name: "내장 브라우저", exact: true })
+      .getByRole("button", { name: "이동", exact: true })
+      .click();
     await expect
       .poll(() =>
         desktop
@@ -69,7 +75,10 @@ test("embedded web pages are isolated and terminal links open in the right pane"
     ).toEqual({ node: false, accounts: false, files: false, terminals: false });
     await web.getByRole("link", { name: "Next", exact: true }).click();
     await expect(web.getByRole("heading", { name: "Next page" })).toBeVisible();
-    await page.getByRole("button", { name: "뒤로", exact: true }).click();
+    await page
+      .getByRole("region", { name: "내장 브라우저", exact: true })
+      .getByRole("button", { name: "뒤로", exact: true })
+      .click();
     await expect(
       web.getByRole("heading", { name: "Browser isolation check" }),
     ).toBeVisible();

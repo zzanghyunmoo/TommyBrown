@@ -12,6 +12,23 @@ const viewSchema = z.object({
     .max(16)
     .default([]),
   selectedWeb: z.number().int().min(0).default(0),
+  browserGroups: z
+    .record(
+      z.string(),
+      z.object({
+        tabs: z
+          .array(
+            z.object({ url: z.string(), connectorId: z.uuid().nullable() }),
+          )
+          .max(16),
+        selected: z.number().int().min(0),
+      }),
+    )
+    .default({}),
+  layout: z.unknown().optional(),
+  spaceLayouts: z.record(z.string(), z.unknown()).default({}),
+  sidebarHidden: z.boolean().default(false),
+  appMode: z.enum(["app", "documents", "connectors"]).default("app"),
 });
 type ViewState = z.infer<typeof viewSchema>;
 const key = "tommybrown.view.v1";
