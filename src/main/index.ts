@@ -137,6 +137,7 @@ async function boot(): Promise<void> {
     models.reopenLogin(z.string().min(1).parse(input)),
   );
   bind("models:copy-launch", (input) => models.copyLaunch(input));
+  bind("models:save-mappings", (input) => models.saveMappings(input));
   bind("workspace:snapshot", () => spaces.snapshot());
   bind("workspace:choose", async (input) => {
     const kind = z.enum(["workspace", "vault"]).parse(input);

@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
+import type { ModelAliases } from "./model-mappings";
 
 export const proxyKeysSchema = z.object({
   client: z.string().min(32),
@@ -19,7 +20,10 @@ export function createProxyKeys(): ProxyKeys {
   };
 }
 
-export function createProxyConfig(input: z.infer<typeof configInput>) {
+export function createProxyConfig(
+  input: z.infer<typeof configInput>,
+  aliases?: ModelAliases,
+) {
   const { port, authDirectory, keys } = configInput.parse(input);
   return {
     "config-version": 8,
@@ -36,7 +40,10 @@ export function createProxyConfig(input: z.infer<typeof configInput>) {
       "disable-auto-update-panel": true,
     },
     access: { "api-keys": [keys.client] },
-    oauth: { "auth-dir": authDirectory },
+    oauth: {
+      "auth-dir": authDirectory,
+      ...(aliases ? { "model-alias": aliases } : {}),
+    },
     plugins: { enabled: false },
     routing: { retry: { "request-retry": 0 } },
     observability: {
