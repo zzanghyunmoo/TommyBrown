@@ -59,7 +59,11 @@ export class TerminalService {
           ? undefined
           : request.model === null
             ? { executable: request.cli, args: [], environment: {} }
-            : await this.route({ cli: request.cli, model: request.model });
+            : await this.route({
+                cli: request.cli,
+                model: request.model,
+                mappingRevision: request.mappingRevision,
+              });
       const connectorProfile =
         request.cli === "powershell"
           ? { args: [], environment: {} }

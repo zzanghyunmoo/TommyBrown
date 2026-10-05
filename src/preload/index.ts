@@ -19,6 +19,8 @@ const bridge: DesktopBridge = {
   cancelLogin: (state) => ipcRenderer.invoke("models:cancel-login", state),
   reopenLogin: (state) => ipcRenderer.invoke("models:reopen-login", state),
   copyLaunch: (request) => ipcRenderer.invoke("models:copy-launch", request),
+  saveMappings: (settings) =>
+    ipcRenderer.invoke("models:save-mappings", settings),
 };
 contextBridge.exposeInMainWorld("desktop", bridge);
 

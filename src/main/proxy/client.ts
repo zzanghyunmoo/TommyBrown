@@ -10,6 +10,7 @@ import {
   providerSchema,
 } from "../../shared/proxy";
 import type { ProxyKeys } from "./config";
+import type { ModelAliases } from "./model-mappings";
 
 const stateSchema = z.string().min(1).max(1024);
 const authHosts = {
@@ -46,6 +47,21 @@ export class ProxyClient {
   async models() {
     const body = await this.inference.get("models").json<unknown>();
     return z.object({ data: z.array(modelSchema) }).parse(body).data;
+  }
+
+  async accountModels(name: string) {
+    const body = await this.management
+      .get("credentials/models", { searchParams: { name } })
+      .json<unknown>();
+    return (
+      z
+        .object({ models: z.array(modelSchema).nullable().default([]) })
+        .parse(body).models ?? []
+    );
+  }
+
+  async setModelAliases(aliases: ModelAliases): Promise<void> {
+    await this.management.put("config/oauth/model-alias", { json: aliases });
   }
 
   async beginLogin(provider: Provider) {

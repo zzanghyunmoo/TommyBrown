@@ -10,6 +10,7 @@ import { GatewayError } from "../../shared/proxy";
 import { ProxyClient } from "./client";
 import type { ProxyKeys } from "./config";
 import { createProxyConfig } from "./config";
+import type { ModelAliases } from "./model-mappings";
 
 export type GatewayOptions = {
   readonly directory: string;
@@ -68,7 +69,7 @@ export class ProxyRuntime {
     });
   }
 
-  start(preferredPort = 8317): Promise<GatewayStatus> {
+  start(preferredPort = 8317, aliases?: ModelAliases): Promise<GatewayStatus> {
     return this.serialize(async () => {
       if (this.current.phase === "running") return this.current;
       this.current = { phase: "starting" };
@@ -78,11 +79,14 @@ export class ProxyRuntime {
         );
         const authDirectory = join(this.options.directory, "accounts");
         await mkdir(authDirectory, { recursive: true, mode: 0o700 });
-        const config = createProxyConfig({
-          port,
-          authDirectory,
-          keys: this.options.keys,
-        });
+        const config = createProxyConfig(
+          {
+            port,
+            authDirectory,
+            keys: this.options.keys,
+          },
+          aliases,
+        );
         await writeFile(this.configPath, JSON.stringify(config), {
           mode: 0o600,
         });

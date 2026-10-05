@@ -2,6 +2,7 @@ import { ReloadIcon } from "@radix-ui/react-icons";
 import { Button, Notice, Panel } from "../../components/primitives";
 import { GatewayBar } from "./gateway-bar";
 import { LaunchControls } from "./launch-controls";
+import { MappingEditor } from "./mapping-editor";
 import { Providers } from "./providers";
 import { useModels } from "./use-models";
 
@@ -70,6 +71,15 @@ export function ModelAccess() {
             void login(provider);
           }}
         />
+        {snapshot && (
+          <MappingEditor
+            key={JSON.stringify(snapshot.mappings)}
+            saved={snapshot.mappings}
+            catalog={snapshot.providerModels}
+            busy={!!busy}
+            run={run}
+          />
+        )}
         <Panel
           title="사용 가능한 모델"
           description="실제 계정에서 제공하는 모델 목록입니다."
@@ -79,6 +89,8 @@ export function ModelAccess() {
         >
           <LaunchControls
             models={snapshot?.models ?? []}
+            mappings={snapshot?.mappings}
+            mappingRevision={snapshot?.mappingRevision}
             busy={!!busy}
             run={run}
           />

@@ -27,6 +27,16 @@ The model-access page can also copy an opt-in PowerShell command for an external
 terminal. That command contains a local gateway key and restores the previous
 process environment when the CLI exits.
 
+In **Model mappings**, connect corresponding OpenAI, Claude, and Antigravity model
+IDs in a row, then choose the execution provider for each CLI. The model selector
+uses that CLI's source column and previews the target provider and model before
+launch. Both directions between every provider pair are supported. Example rows
+are editable shorthand; replace execution targets with actual IDs from your account.
+Claude's Opus, Sonnet, and Haiku shortcuts can be assigned to rows; unassigned
+shortcuts use the selected session model. Settings persist after restart. Reopen
+CLI sessions after changing mappings, and refresh the model selector if its preview
+is outdated. See the [mapping guide](docs/solutions/architecture-patterns/provider-model-mapping.md).
+
 The gateway uses loopback port 8317. An occupied port produces an error; TommyBrown
 does not stop other applications. Closing TommyBrown stops its own gateway.
 Account files stay in local application data with Windows access restricted to the

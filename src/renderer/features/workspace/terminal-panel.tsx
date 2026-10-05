@@ -6,10 +6,13 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ProxyModel } from "../../../shared/proxy";
+import type { ModelSnapshot } from "../../../shared/bridge";
+import { emptyMappings, launchModels } from "../../../shared/model-mappings";
+import { providerSchema } from "../../../shared/proxy";
 import { terminalLaunchSchema } from "../../../shared/terminal";
 import type { Space } from "../../../shared/workspace";
 import { Button, Notice } from "../../components/primitives";
+import { RoutePreview } from "../models/route-preview";
 import type { PaneHandle } from "./pane-handle";
 import { TerminalConnectors } from "./terminal-connectors";
 import { TerminalView } from "./terminal-view";
@@ -31,7 +34,18 @@ export function TerminalPanel({
   const [cli, setCli] = useState("powershell");
   const [model, setModel] = useState("");
   const [connectors, setConnectors] = useState<readonly string[]>([]);
-  const [models, setModels] = useState<readonly ProxyModel[]>([]);
+  const [modelSnapshot, setModelSnapshot] = useState<ModelSnapshot>();
+  const provider = providerSchema.safeParse(cli);
+  const mappings = modelSnapshot?.mappings ?? emptyMappings();
+  const choices = provider.success
+    ? launchModels(
+        mappings,
+        provider.data,
+        modelSnapshot?.models.filter(
+          (candidate) => !candidate.id.startsWith("tb-"),
+        ) ?? [],
+      )
+    : [];
   const [modelError, setModelError] = useState<string>();
   const sessions = terminals.sessions.filter(
     (session) => session.spaceId === space.id,
@@ -55,6 +69,7 @@ export function TerminalPanel({
         spaceId: space.id,
         cli,
         model: cli === "powershell" || !model ? null : model,
+        mappingRevision: modelSnapshot?.mappingRevision,
         connectors:
           cli === "powershell" || cli === "antigravity" ? [] : connectors,
       }),
@@ -96,10 +111,10 @@ export function TerminalPanel({
     window.desktop
       .snapshot()
       .then((snapshot) => {
-        if (active) setModels(snapshot.models);
+        if (active) setModelSnapshot(snapshot);
       })
       .catch(() => {
-        if (active) setModels([]);
+        if (active) setModelSnapshot(undefined);
       });
     return () => {
       active = false;
@@ -113,7 +128,10 @@ export function TerminalPanel({
           <select
             aria-label="CLI"
             value={cli}
-            onChange={(event) => setCli(event.target.value)}
+            onChange={(event) => {
+              setCli(event.target.value);
+              setModel("");
+            }}
           >
             <option value="powershell">PowerShell</option>
             <option value="claude">Claude Code</option>
@@ -132,7 +150,7 @@ export function TerminalPanel({
               void window.desktop
                 .snapshot()
                 .then((snapshot) => {
-                  setModels(snapshot.models);
+                  setModelSnapshot(snapshot);
                   setModelError(undefined);
                 })
                 .catch((failure: unknown) => {
@@ -141,9 +159,12 @@ export function TerminalPanel({
             }}
           >
             <option value="">CLI 기존 설정</option>
-            {models.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.id}
+            {model && !choices.includes(model) && (
+              <option value={model}>{model} (설정 확인 필요)</option>
+            )}
+            {choices.map((candidate) => (
+              <option key={candidate} value={candidate}>
+                {candidate}
               </option>
             ))}
           </select>
@@ -158,6 +179,9 @@ export function TerminalPanel({
           <PlusIcon />
         </Button>
       </div>
+      {provider.success && (
+        <RoutePreview settings={mappings} cli={provider.data} model={model} />
+      )}
       {terminals.error && <Notice error>{terminals.error}</Notice>}
       {modelError && <Notice error>{modelError}</Notice>}
       {cli === "antigravity" ? (
