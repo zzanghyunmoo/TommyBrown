@@ -16,10 +16,12 @@ bun run start
 ```
 
 In Model access, install the engine, start the gateway, and connect an account in
-your browser. Open a workspace, choose Claude Code or Codex and a discovered model,
+your browser. Open a workspace, choose Claude Code, Codex, or Antigravity and a discovered model,
 then start a terminal session. Routing applies to that session only. Install the chosen
 CLI separately using its native installer or standard npm package; npm installations
 also need Node.js on PATH. Custom shell wrappers are not supported.
+Antigravity uses the native `agy` executable. Its selected model uses the gateway's
+OpenAI-compatible endpoint without changing global CLI settings.
 
 The model-access page can also copy an opt-in PowerShell command for an external
 terminal. That command contains a local gateway key and restores the previous
@@ -33,13 +35,15 @@ by CLIProxyAPI and are not encrypted by TommyBrown itself.
 
 ## Workspace and connectors
 
-- Keep a terminal, browser, and app visible together. Drag the dividers, split more
-  terminal panes, or zoom one pane; active sessions keep running. The app pane opens
-  localhost web apps and connected web services, with code/documents and connectors
-  available in its tool tabs. It does not embed arbitrary Windows application windows.
-- Open a folder as a space. Run PowerShell, Claude Code, or Codex in real terminals.
+- Start with one working area and switch between Terminal, Code/Documents, and
+  Connectors tabs. Opening a browser, terminal link, app, or connector web screen
+  automatically opens the right split. Browser and app are peer tabs there; closing
+  that split restores the working area width while retaining web state. Drag dividers,
+  explicitly split terminals, or zoom a pane. Apps are web screens, not arbitrary
+  embedded Windows application windows.
+- Open a folder as a space. Run PowerShell, Claude Code, Codex, or Antigravity in real terminals.
   Terminal sessions stay alive when switching tabs and stop when closed or the app exits.
-- Browse, edit, and save text in the right pane. Markdown has an offline preview.
+- Browse, edit, and save text in the Code/Documents tab. Markdown has an offline preview.
   External edits produce a conflict instead of overwriting your draft.
 - Click a terminal HTTP(S) link to open the right browser pane. Browser sessions have
   no local IPC or Node privileges; each connector has its own persistent session.
@@ -49,6 +53,8 @@ by CLIProxyAPI and are not encrypted by TommyBrown itself.
 - For agent data and tools, configure a trusted Streamable HTTP MCP endpoint and an
   optional bearer token. Web login is separate from MCP authentication. Inspect and
   explicitly run tools in the connector pane, or select connections for a new CLI session.
+  Per-session connector injection supports Claude Code and Codex. Manage Antigravity
+  MCP connections in its own CLI; TommyBrown does not rewrite that global configuration.
   OAuth-only MCP servers require an issued token or a compatible local adapter.
 - Choose a local Obsidian vault to browse, search, preview, and edit Markdown offline.
   The Obsidian button opens the installed local app. Vault use does not require Sync
@@ -82,6 +88,8 @@ Press `Ctrl+B` twice to send one literal Ctrl+B to the client. Escape cancels a
 pending prefix. Herdr's detached server, worktree commands, and copy-mode editor
 are not part of this workbench. Layouts allow up to eight panes and sixteen web
 tabs total; closing a terminal pane confirms before ending its running sessions.
+The primary working area stays mounted; its close action closes the active tab.
+Arrow keys and Home/End switch working-area and right-side tabs.
 
 ## Windows package
 
@@ -96,9 +104,9 @@ Other operating systems and architectures have not been validated.
 
 ## Development status and verification
 
-The simultaneous workbench and Herdr-compatible pane shortcuts are verified in a
-Windows package. See the [workbench checkpoint](docs/verification/2026-10-05-simultaneous-workbench.md)
-for native captures, restart behavior, compact-window validation, and scope.
+The tabbed workspace supersedes the initial simultaneous three-pane default.
+See the [tabbed workspace checkpoint](docs/verification/2026-10-05-tabbed-workspace.md)
+for Antigravity routing, native captures, restart behavior and compact-window validation.
 
 The gateway, ADE, connectors, offline vault, and Windows package are implemented.
 An OpenAI account connected by the owner has served real Codex and Claude Code
@@ -131,7 +139,7 @@ findings; see the checkpoint for their disposition.
 The intended experience combines:
 
 - Claude Code, Codex, and Antigravity OAuth accounts behind a local CLIProxyAPI gateway.
-- Spaces and agents on the left, working tabs above, and a code, Markdown, or browser pane on the right.
+- Spaces and agents on the left, working tabs in the main area, and browser/app tabs on the right when opened.
 - Browser, chat, issue tracker, knowledge, and source control connectors, plus local-only Obsidian vaults.
 
 ## References

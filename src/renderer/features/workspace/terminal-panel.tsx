@@ -55,7 +55,8 @@ export function TerminalPanel({
         spaceId: space.id,
         cli,
         model: cli === "powershell" || !model ? null : model,
-        connectors: cli === "powershell" ? [] : connectors,
+        connectors:
+          cli === "powershell" || cli === "antigravity" ? [] : connectors,
       }),
     );
     if (session) {
@@ -117,6 +118,7 @@ export function TerminalPanel({
             <option value="powershell">PowerShell</option>
             <option value="claude">Claude Code</option>
             <option value="codex">Codex</option>
+            <option value="antigravity">Antigravity</option>
           </select>
         </label>
         <label>
@@ -158,11 +160,15 @@ export function TerminalPanel({
       </div>
       {terminals.error && <Notice error>{terminals.error}</Notice>}
       {modelError && <Notice error>{modelError}</Notice>}
-      <TerminalConnectors
-        selected={connectors}
-        change={setConnectors}
-        disabled={cli === "powershell"}
-      />
+      {cli === "antigravity" ? (
+        <p className="cli-note">Antigravity의 MCP 연결은 CLI에서 관리합니다.</p>
+      ) : (
+        <TerminalConnectors
+          selected={connectors}
+          change={setConnectors}
+          disabled={cli === "powershell"}
+        />
+      )}
       <div className="terminal-tabs" role="tablist" aria-label="터미널 탭">
         {sessions.map((session, index) => (
           <div className="terminal-tab" key={session.id}>

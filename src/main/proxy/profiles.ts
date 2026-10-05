@@ -14,6 +14,20 @@ export function createLaunchProfile(
   const { cli, model } = launchRequestSchema.parse(request);
   const { port, key } = gatewaySchema.parse(gateway);
   const base = `http://127.0.0.1:${port}`;
+  if (cli === "antigravity")
+    return {
+      executable: "agy",
+      args: ["--model", model],
+      environment: {
+        AGY_LLM_GATEWAY_URL: `${base}/v1`,
+        AGY_LLM_GATEWAY_API_KEY: key,
+        AGY_LLM_GATEWAY_WIRE_PROTOCOL: "openai",
+        AGY_LLM_GATEWAY_MODELS: model,
+        AGY_LLM_GATEWAY_HEADERS: null,
+        AGY_LLM_GATEWAY_PROXY_URL: null,
+        AGY_LLM_GATEWAY_CA_CERT: null,
+      },
+    };
   if (cli === "claude")
     return {
       executable: "claude",

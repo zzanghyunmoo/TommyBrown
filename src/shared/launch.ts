@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const launchRequestSchema = z.object({
-  cli: z.enum(["claude", "codex"]),
+  cli: z.enum(["claude", "codex", "antigravity"]),
   model: z
     .string()
     .min(1)

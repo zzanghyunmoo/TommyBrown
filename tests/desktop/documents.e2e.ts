@@ -37,7 +37,7 @@ test("choose a real space, preserve drafts across tabs, save and detect conflict
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
-    await page.getByRole("button", { name: "코드·문서", exact: true }).click();
+    await page.getByRole("tab", { name: "코드·문서", exact: true }).click();
     await page.getByRole("button", { name: "note.md", exact: true }).click();
     const editor = page.getByRole("textbox", { name: /문서 편집기 note.md/ });
     await expect(editor).toBeVisible();
@@ -46,6 +46,20 @@ test("choose a real space, preserve drafts across tabs, save and detect conflict
       .click({ position: { x: 80, y: 10 } });
     await page.keyboard.press("Control+A");
     await page.keyboard.insertText("# Draft kept across tabs\n");
+    await page.getByRole("tab", { name: "터미널", exact: true }).click();
+    await page.getByRole("tab", { name: "터미널", exact: true }).press("End");
+    await expect(
+      page.getByRole("tab", { name: "커넥터", exact: true }),
+    ).toBeFocused();
+    await page
+      .getByRole("tab", { name: "커넥터", exact: true })
+      .press("ArrowLeft");
+    await expect(
+      page.getByRole("tab", { name: "코드·문서", exact: true }),
+    ).toBeFocused();
+    await expect(page.locator(".view-lines")).toContainText(
+      "Draft kept across tabs",
+    );
     await page.getByRole("button", { name: "index.ts", exact: true }).click();
     await page.getByRole("tab", { name: /note.md/ }).click();
     await expect(page.locator(".view-lines")).toContainText(

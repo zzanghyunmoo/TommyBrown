@@ -189,6 +189,13 @@ it("passes MCP secrets only in each CLI process environment", async () => {
   });
   if (!connector) throw new Error("No connector");
   const name = `tommybrown_${connector.id.replaceAll("-", "")}`;
+  expect(() => connectorProfile(store, "antigravity", [connector.id])).toThrow(
+    /does not support per-session/,
+  );
+  expect(connectorProfile(store, "antigravity", [])).toEqual({
+    args: [],
+    environment: {},
+  });
   for (const cli of ["claude", "codex"] as const) {
     const profile = connectorProfile(store, cli, [connector.id]);
     expect(profile.args.join(" ")).not.toContain("fixture-only-secret");

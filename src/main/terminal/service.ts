@@ -32,7 +32,7 @@ export class TerminalService {
     private readonly route: (request: LaunchRequest) => Promise<LaunchProfile>,
     private readonly emit: (event: TerminalEvent) => void,
     private readonly connectorRoute: (
-      cli: "claude" | "codex",
+      cli: LaunchRequest["cli"],
       ids: readonly string[],
     ) => Pick<LaunchProfile, "args" | "environment"> = () => ({
       args: [],

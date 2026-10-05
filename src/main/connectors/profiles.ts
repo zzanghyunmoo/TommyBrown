@@ -1,11 +1,15 @@
-import type { LaunchProfile } from "../../shared/launch";
+import type { LaunchProfile, LaunchRequest } from "../../shared/launch";
 import type { ConnectorStore } from "./store";
 
 export function connectorProfile(
   store: ConnectorStore,
-  cli: "claude" | "codex",
+  cli: LaunchRequest["cli"],
   ids: readonly string[],
 ): Pick<LaunchProfile, "args" | "environment"> {
+  if (cli === "antigravity" && ids.length)
+    throw new Error(
+      "Antigravity does not support per-session TommyBrown MCP connectors.",
+    );
   const args: string[] = [];
   const environment: Record<string, string> = {};
   const servers: Record<

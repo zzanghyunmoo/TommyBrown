@@ -11,9 +11,10 @@ import {
 } from "@radix-ui/react-icons";
 import type { Space } from "../../../shared/workspace";
 import { Button, Notice } from "../../components/primitives";
-import { AppPane } from "./app-pane";
 import { BrowserPane } from "./browser-pane";
 import type { PaneRectangle } from "./layout";
+import { MainPane } from "./main-pane";
+import { ModeTabs } from "./mode-tabs";
 import { Splitter } from "./splitter";
 import { TerminalPanel } from "./terminal-panel";
 import { useBrowser } from "./use-browser";
@@ -39,6 +40,7 @@ export function WorkspaceView({
   readonly selectSpace: (id: string) => void;
 }) {
   const browser = useBrowser("browser");
+  const application = useBrowser("app");
   const workbench = useWorkbench({
     space,
     terminals,
@@ -56,14 +58,38 @@ export function WorkspaceView({
       .map((kind) => ({ kind, id: kind, x: 0, y: 0, width: 0, height: 0 })),
   ];
   const nativeVisible = visible && !workbench.dialog && !workbench.dragging;
+  function paneActions(id: string, title: string) {
+    return (
+      <>
+        <Button
+          tone="quiet"
+          aria-label={title + (workbench.zoom === id ? " 복원" : " 확대")}
+          title="Ctrl+B → z"
+          onClick={() => workbench.command("zoom", id)}
+        >
+          {workbench.zoom === id ? (
+            <ExitFullScreenIcon />
+          ) : (
+            <EnterFullScreenIcon />
+          )}
+        </Button>
+        <Button
+          tone="quiet"
+          aria-label={`${title} 패널 닫기`}
+          title="Ctrl+B → x"
+          onClick={() => {
+            void workbench.closePane(id);
+          }}
+        >
+          <Cross2Icon />
+        </Button>
+      </>
+    );
+  }
   return (
-    <section className="workbench" aria-label="동시 작업 화면">
+    <section className="workbench" aria-label="탭 작업 화면">
       <div className="workbench-toolbar">
         <div className="workbench-actions">
-          <Button tone="quiet" onClick={() => workbench.ensure("terminal")}>
-            <CodeIcon />
-            터미널
-          </Button>
           <Button tone="quiet" onClick={() => workbench.ensure("browser")}>
             <GlobeIcon />
             브라우저
@@ -122,14 +148,18 @@ export function WorkspaceView({
           const shown =
             pane.width > 0 && (!workbench.zoom || workbench.zoom === pane.id);
           const title =
-            pane.kind === "terminal"
-              ? "터미널"
-              : pane.kind === "browser"
-                ? "브라우저"
-                : "앱 · 도구";
+            pane.id === "terminal"
+              ? "작업"
+              : pane.kind === "terminal"
+                ? "터미널"
+                : pane.kind === "browser"
+                  ? "브라우저"
+                  : "앱 · 도구";
           return (
             <section
               key={pane.id}
+              id={`pane-${pane.id}`}
+              role={pane.kind === "terminal" ? "region" : "tabpanel"}
               className="workbench-pane"
               data-pane={pane.id}
               data-kind={pane.kind}
@@ -149,51 +179,85 @@ export function WorkspaceView({
               onFocusCapture={() => workbench.setActive(pane.id)}
               onPointerDownCapture={() => workbench.setActive(pane.id)}
             >
-              <header className="workbench-pane-header">
-                <button
-                  type="button"
-                  className="pane-focus"
-                  onClick={() => workbench.focus(pane.id)}
-                >
-                  {pane.kind === "terminal" ? (
-                    <CodeIcon />
-                  ) : pane.kind === "browser" ? (
-                    <GlobeIcon />
+              {pane.id !== "terminal" && (
+                <header className="workbench-pane-header">
+                  {pane.kind !== "terminal" ? (
+                    <ModeTabs
+                      label="오른쪽 화면 탭"
+                      selected={pane.kind}
+                      select={(kind) => {
+                        workbench.ensure(kind, false);
+                        requestAnimationFrame(() =>
+                          document
+                            .getElementById(`pane-${kind}`)
+                            ?.querySelector<HTMLElement>(
+                              '.pane-mode-tabs [aria-selected="true"]',
+                            )
+                            ?.focus(),
+                        );
+                      }}
+                      items={[
+                        {
+                          id: "browser",
+                          label: "브라우저",
+                          panel: "pane-browser",
+                          icon: <GlobeIcon />,
+                        },
+                        {
+                          id: "app",
+                          label: "앱 화면",
+                          panel: "pane-app",
+                          icon: <CubeIcon />,
+                        },
+                      ]}
+                    >
+                      {paneActions(pane.id, title)}
+                    </ModeTabs>
                   ) : (
-                    <CubeIcon />
+                    <>
+                      <button
+                        type="button"
+                        className="pane-focus"
+                        onClick={() => workbench.focus(pane.id)}
+                      >
+                        {pane.kind === "terminal" ? (
+                          <CodeIcon />
+                        ) : pane.kind === "browser" ? (
+                          <GlobeIcon />
+                        ) : (
+                          <CubeIcon />
+                        )}
+                        <strong>{title}</strong>
+                        <span className="pane-focus-mark" aria-hidden="true">
+                          {workbench.focused === pane.id ? "●" : ""}
+                        </span>
+                      </button>
+                      {paneActions(pane.id, title)}
+                    </>
                   )}
-                  <strong>{title}</strong>
-                  <span className="pane-focus-mark" aria-hidden="true">
-                    {workbench.focused === pane.id ? "●" : ""}
-                  </span>
-                </button>
-                <Button
-                  tone="quiet"
-                  aria-label={
-                    title + (workbench.zoom === pane.id ? " 복원" : " 확대")
-                  }
-                  title="Ctrl+B → z"
-                  onClick={() => workbench.command("zoom", pane.id)}
-                >
-                  {workbench.zoom === pane.id ? (
-                    <ExitFullScreenIcon />
-                  ) : (
-                    <EnterFullScreenIcon />
-                  )}
-                </Button>
-                <Button
-                  tone="quiet"
-                  aria-label={`${title} 패널 닫기`}
-                  title="Ctrl+B → x"
-                  onClick={() => {
-                    void workbench.closePane(pane.id);
-                  }}
-                >
-                  <Cross2Icon />
-                </Button>
-              </header>
+                </header>
+              )}
               <div className="workbench-pane-body">
-                {pane.kind === "terminal" && (
+                {pane.id === "terminal" && (
+                  <MainPane
+                    space={space}
+                    terminals={workbench.scopedTerminals(pane.id)}
+                    openUrl={openUrl}
+                    openApp={async (id) => {
+                      if (workbench.ensure("app"))
+                        await application.run(() =>
+                          window.connectors.open(id, "app"),
+                        );
+                    }}
+                    actions={paneActions(pane.id, title)}
+                    ref={(handle) => {
+                      if (handle)
+                        workbench.handles.current.set(pane.id, handle);
+                      else workbench.handles.current.delete(pane.id);
+                    }}
+                  />
+                )}
+                {pane.kind === "terminal" && pane.id !== "terminal" && (
                   <TerminalPanel
                     space={space}
                     terminals={workbench.scopedTerminals(pane.id)}
@@ -218,9 +282,9 @@ export function WorkspaceView({
                   />
                 )}
                 {pane.kind === "app" && (
-                  <AppPane
-                    space={space}
-                    openUrl={openUrl}
+                  <BrowserPane
+                    browser={application}
+                    app
                     visible={nativeVisible && shown}
                     boundsKey={workbench.boundsKey}
                     ref={(handle) => {

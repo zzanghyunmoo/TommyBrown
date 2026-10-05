@@ -3,7 +3,7 @@ import { z } from "zod";
 export const terminalLaunchSchema = z
   .object({
     spaceId: z.uuid(),
-    cli: z.enum(["powershell", "claude", "codex"]),
+    cli: z.enum(["powershell", "claude", "codex", "antigravity"]),
     model: z.string().min(1).max(200).nullable(),
     connectors: z.array(z.uuid()).max(16).default([]),
   })
