@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -35,6 +36,13 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
       `@"${process.execPath}" "%~dp0node_modules\\${packageName.replaceAll("/", "\\")}\\cli.js" %*\r\n`,
     );
   }
+  const nativeSource = resolve(directory, "native-cli.cjs");
+  await writeFile(nativeSource, fixtureSource);
+  execFileSync(
+    "bun",
+    ["build", nativeSource, "--compile", "--outfile", resolve(bin, "agy.exe")],
+    { timeout: 30_000, windowsHide: true },
+  );
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (value === undefined || key === "ELECTRON_RUN_AS_NODE") continue;
@@ -58,6 +66,12 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
       });
     }, project);
     const page = await desktopWindow(desktop);
+    await page
+      .getByLabel("사용할 CLI", { exact: true })
+      .selectOption("antigravity");
+    await expect(page.getByLabel("사용할 CLI", { exact: true })).toHaveValue(
+      "antigravity",
+    );
     const endpoint = "https://example.com/a&b/(mcp)";
     const [connector] = await page.evaluate(
       (url) =>
@@ -130,6 +144,19 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
           .toEqual([]);
       });
     }
+    await page.getByLabel("CLI", { exact: true }).selectOption("antigravity");
+    await expect(page.locator(".terminal-connectors")).toHaveCount(0);
+    await page.getByRole("button", { name: "새 세션", exact: true }).click();
+    await expect(page.locator(".xterm-rows")).toContainText("cli-shim-ready");
+    expect(
+      recordSchema.parse(JSON.parse(await readFile(capture, "utf8"))).args,
+    ).toEqual([]);
+    await page
+      .getByRole("button", { name: "antigravity 1 종료", exact: true })
+      .click();
+    await expect
+      .poll(() => page.evaluate(() => window.terminal.list()))
+      .toEqual([]);
   } finally {
     await desktop.close();
   }

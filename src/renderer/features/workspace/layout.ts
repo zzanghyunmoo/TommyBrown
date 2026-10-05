@@ -45,20 +45,41 @@ const layoutSchema: z.ZodType<Layout> = z.lazy(() =>
 );
 
 export function defaultLayout(): Layout {
+  return { kind: "terminal", id: "terminal" };
+}
+
+export function workingLayout(layout: Layout): Layout {
+  function withoutSupport(node: Layout): Layout | null {
+    if (node.kind !== "split") return node.kind === "terminal" ? node : null;
+    const first = withoutSupport(node.first);
+    const second = withoutSupport(node.second);
+    return first && second ? { ...node, first, second } : (first ?? second);
+  }
+  const work = withoutSupport(layout) ?? defaultLayout();
+  if (layoutGeometry(work).panes.some((pane) => pane.id === "terminal"))
+    return work;
+  function primary(node: Layout): Layout {
+    return node.kind === "split"
+      ? { ...node, first: primary(node.first) }
+      : defaultLayout();
+  }
+  return primary(work);
+}
+
+export function openSupport(layout: Layout, kind: "browser" | "app"): Layout {
+  if (
+    layout.kind === "split" &&
+    layout.second.kind !== "split" &&
+    layout.second.kind !== "terminal"
+  )
+    return { ...layout, second: { kind, id: kind } };
   return {
     kind: "split",
-    id: "root",
+    id: "support-root",
     axis: "vertical",
-    ratio: 0.48,
-    first: { kind: "terminal", id: "terminal" },
-    second: {
-      kind: "split",
-      id: "support",
-      axis: "horizontal",
-      ratio: 0.5,
-      first: { kind: "browser", id: "browser" },
-      second: { kind: "app", id: "app" },
-    },
+    ratio: 0.6,
+    first: workingLayout(layout),
+    second: { kind, id: kind },
   };
 }
 

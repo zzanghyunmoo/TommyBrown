@@ -15,6 +15,7 @@ import {
   type Layout,
   layoutGeometry,
   neighborPane,
+  openSupport,
   type PaneKind,
   parseLayout,
   removePane,
@@ -142,7 +143,24 @@ export function useWorkbench({
     if (zoom) setZoom(id);
     requestAnimationFrame(() => handles.current.get(id)?.focus());
   }
-  function ensure(kind: PaneKind) {
+  function ensure(kind: PaneKind, focusContent = true) {
+    if (kind !== "terminal") {
+      if (
+        panes.length >= 8 &&
+        panes.every((pane) => pane.kind === "terminal")
+      ) {
+        setError(
+          "패널은 최대 8개까지 열 수 있습니다. 사용하지 않는 패널을 먼저 닫으세요.",
+        );
+        return undefined;
+      }
+      setLayout((current) => openSupport(current, kind));
+      setZoom(null);
+      setActive(kind);
+      if (focusContent)
+        requestAnimationFrame(() => handles.current.get(kind)?.focus());
+      return kind;
+    }
     const found = panes.find((pane) => pane.kind === kind);
     if (found) {
       focus(found.id);
@@ -186,7 +204,7 @@ export function useWorkbench({
   async function closePane(id: string) {
     const pane = panes.find((item) => item.id === id);
     if (!pane) return;
-    if (panes.length === 1) {
+    if (panes.length === 1 || id === "terminal") {
       handles.current.get(id)?.closeTab();
       return;
     }

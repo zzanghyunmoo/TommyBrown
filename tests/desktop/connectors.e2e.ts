@@ -39,7 +39,7 @@ test("connector screens use separate persistent sessions and disconnect clears l
     }, project);
     const page = await desktopWindow(desktop);
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
-    await page.getByRole("button", { name: "커넥터", exact: true }).click();
+    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
     const panel = page.getByRole("region", { name: "커넥터 설정" });
     await panel.getByLabel("서비스", { exact: true }).selectOption("github");
     await panel.getByLabel("연결 이름", { exact: true }).fill("Fixture source");
@@ -121,7 +121,7 @@ test("connector screens use separate persistent sessions and disconnect clears l
         ),
       )
       .toEqual([connectorId]);
-    await page.getByRole("button", { name: "커넥터", exact: true }).click();
+    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Fixture source" }),
     ).toBeVisible();

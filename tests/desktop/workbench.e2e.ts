@@ -54,7 +54,7 @@ async function prefix(desktop: ElectronApplication, page: Page, key: string) {
   if (shifted) await nativeKey(desktop, page, "Shift", [], "up");
 }
 
-test("terminal, browser, and app stay live together through Herdr pane commands", async () => {
+test("working tabs and automatic right split preserve sessions through Herdr commands", async () => {
   const server = createServer((request, response) => {
     response.setHeader("content-type", "text/html; charset=utf-8");
     const application = request.url?.startsWith("/app");
@@ -106,6 +106,10 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     const terminal = page.locator('[data-pane="terminal"]');
     const browser = page.locator('[data-pane="browser"]');
     const app = page.locator('[data-pane="app"]');
+    await expect(browser).toBeHidden();
+    await expect(app).toBeHidden();
+    await expect(page.getByRole("tablist", { name: "작업 탭" })).toBeVisible();
+    await nativeCapture(desktop, "test-results/tabbed-initial-native.png");
     await terminal
       .getByRole("button", { name: "새 세션", exact: true })
       .click();
@@ -115,10 +119,22 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     await expect(terminal.locator(".xterm-rows")).toContainText(
       "workbench-alive",
     );
+    await page
+      .locator(".workbench-toolbar")
+      .getByRole("button", { name: "브라우저", exact: true })
+      .click();
+    expect((await browser.boundingBox())?.x).toBeGreaterThan(
+      (await terminal.boundingBox())?.x ?? 0,
+    );
     await browser
       .getByRole("textbox", { name: "웹 주소", exact: true })
       .fill(`${origin}/reference`);
     await browser.getByRole("button", { name: "이동", exact: true }).click();
+    await page
+      .locator(".workbench-toolbar")
+      .getByRole("button", { name: "앱", exact: true })
+      .click();
+    await expect(browser).toBeHidden();
     await app
       .getByRole("textbox", { name: "앱 주소", exact: true })
       .fill(`${origin}/app`);
@@ -150,8 +166,24 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     await expect(
       preview.getByRole("button", { name: "Updated" }),
     ).toBeVisible();
+    await app.getByRole("tab", { name: "브라우저", exact: true }).click();
     await web.getByRole("textbox", { name: "Note" }).fill("retained reference");
+    await browser.getByRole("tab", { name: "앱 화면", exact: true }).click();
     await preview.getByRole("textbox", { name: "Note" }).fill("retained app");
+    await app.getByRole("tab", { name: "앱 화면", exact: true }).click();
+    await app.getByRole("tab", { name: "앱 화면", exact: true }).press("Home");
+    await expect(
+      browser.getByRole("tab", { name: "브라우저", exact: true }),
+    ).toBeFocused();
+    await browser
+      .getByRole("tab", { name: "브라우저", exact: true })
+      .press("End");
+    await expect(
+      app.getByRole("tab", { name: "앱 화면", exact: true }),
+    ).toBeFocused();
+    await expect(
+      app.getByRole("tab", { name: "Task app", exact: true }),
+    ).toBeVisible();
     const visibleViews = () =>
       desktop.evaluate(
         ({ BrowserWindow, WebContentsView }) =>
@@ -159,7 +191,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
             (view) => view instanceof WebContentsView && view.getVisible(),
           ).length,
       );
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     expect(
       await preview.evaluate(
         () =>
@@ -169,6 +201,20 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     await page.screenshot({ path: "test-results/workbench-controls.png" });
     await nativeCapture(desktop, "test-results/workbench-native.png");
 
+    await app.getByRole("tab", { name: "브라우저", exact: true }).click();
+    await expect(app).toBeHidden();
+    await browser
+      .getByRole("button", { name: "브라우저 패널 닫기", exact: true })
+      .click();
+    await expect(browser).toBeHidden();
+    await expect.poll(visibleViews).toBe(0);
+    await page
+      .locator(".workbench-toolbar")
+      .getByRole("button", { name: "브라우저", exact: true })
+      .click();
+    await expect(web.getByRole("textbox", { name: "Note" })).toHaveValue(
+      "retained reference",
+    );
     await web.getByRole("textbox", { name: "Note" }).click();
     await prefix(desktop, web, "h");
     await expect(terminal).toHaveAttribute("data-focused", "true");
@@ -178,7 +224,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     await expect(app).toBeHidden();
     await expect.poll(visibleViews).toBe(0);
     await prefix(desktop, page, "z");
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     await prefix(desktop, page, "-");
     await expect(page.locator('[data-kind="terminal"]')).toHaveCount(2);
     await expect
@@ -201,14 +247,14 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     await nativeKey(desktop, page, "Escape");
     await expect(
       page.getByRole("separator", { name: "좌우 패널 크기" }).first(),
-    ).toHaveAttribute("aria-valuenow", "53");
+    ).toHaveAttribute("aria-valuenow", "65");
     await prefix(desktop, page, "?");
     await expect(
       page.getByRole("dialog", { name: "Herdr 단축키" }),
     ).toBeVisible();
     await expect.poll(visibleViews).toBe(0);
     await nativeKey(desktop, page, "Escape");
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     const appState = await page.evaluate(() => window.browser.snapshot("app"));
     await web.getByRole("link", { name: "Open reference tab" }).click();
     await expect
@@ -218,7 +264,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
         ),
       )
       .toBe(2);
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     expect(await page.evaluate(() => window.browser.snapshot("app"))).toEqual(
       appState,
     );
@@ -261,7 +307,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
       .click();
     await expect.poll(visibleViews).toBe(0);
     await page.locator(".space-row").filter({ hasText: "project" }).click();
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     const originalSessions = await page.evaluate(() => window.terminal.list());
     await desktop.evaluate(({ dialog }, path) => {
       dialog.showOpenDialog = async () => ({
@@ -271,7 +317,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     }, other);
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
     await expect(page.locator('[data-kind="terminal"]')).toHaveCount(1);
-    await terminal.getByRole("button", { name: "터미널", exact: true }).click();
+    await terminal.getByRole("tab", { name: "터미널", exact: true }).click();
     await prefix(desktop, page, "-");
     await expect(page.locator('[data-kind="terminal"]')).toHaveCount(2);
     await expect
@@ -302,7 +348,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     await page.locator(".space-row").filter({ hasText: "project" }).click();
     await expect(terminal).toBeVisible();
     await expect(second).toBeVisible();
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     await expect(terminal.locator(".xterm-rows")).toContainText(
       "workbench-alive",
     );
@@ -323,14 +369,15 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
       bounds.y + bounds.height / 4,
     );
     await page.mouse.up();
-    await expect.poll(visibleViews).toBe(2);
-    await expect(split).not.toHaveAttribute("aria-valuenow", "53");
+    await expect.poll(visibleViews).toBe(1);
+    await expect(split).not.toHaveAttribute("aria-valuenow", "65");
     const ratio = await split.getAttribute("aria-valuenow");
     await web.getByRole("textbox", { name: "Note" }).click();
-    await prefix(desktop, web, "J");
-    const browserBounds = await browser.boundingBox();
-    const appBounds = await app.boundingBox();
-    expect(browserBounds?.y).toBeGreaterThan(appBounds?.y ?? 0);
+    await prefix(desktop, web, "H");
+    expect((await browser.boundingBox())?.x).toBeLessThan(
+      (await terminal.boundingBox())?.x ?? 0,
+    );
+    await prefix(desktop, web, "L");
     await expect(web.getByRole("textbox", { name: "Note" })).toHaveValue(
       "retained reference",
     );
@@ -342,7 +389,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
         page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
       )
       .toBe(true);
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     await expect(page.getByRole("alert")).toHaveCount(0);
     for (const panel of [terminal, second])
       await expect
@@ -352,7 +399,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
             0,
         )
         .toBeGreaterThan(24);
-    for (const panel of [browser, app])
+    for (const panel of [browser])
       await expect
         .poll(
           async () =>
@@ -368,7 +415,7 @@ test("terminal, browser, and app stay live together through Herdr pane commands"
     await expect(
       restored.getByRole("separator", { name: "좌우 패널 크기" }).first(),
     ).toHaveAttribute("aria-valuenow", ratio ?? "");
-    await expect.poll(visibleViews).toBe(2);
+    await expect.poll(visibleViews).toBe(1);
     expect(await restored.evaluate(() => window.terminal.list())).toEqual([]);
     expect(
       (await restored.evaluate(() => window.browser.snapshot())).tabs.map(

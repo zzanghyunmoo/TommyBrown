@@ -48,7 +48,7 @@ export function TerminalConnectors({
           {connector.name}
         </label>
       ))}
-      {!list.length && <p>오른쪽 커넥터 탭에서 MCP 연결을 추가하세요.</p>}
+      {!list.length && <p>커넥터 탭에서 MCP 연결을 추가하세요.</p>}
       <p>
         선택한 연결은 새 CLI 세션에서 사용합니다. 연결을 해제하면 해당 연결을
         사용하는 터미널도 종료됩니다.

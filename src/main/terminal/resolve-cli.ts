@@ -2,12 +2,18 @@ import { readFile, stat } from "node:fs/promises";
 import { delimiter, dirname, extname, join } from "node:path";
 import { z } from "zod";
 
-async function executableOnPath(name: string): Promise<string> {
+async function executableOnPath(
+  name: string,
+  fallback: readonly string[] = [],
+): Promise<string> {
   const path =
     Object.entries(process.env).find(
       ([key]) => key.toLowerCase() === "path",
     )?.[1] ?? "";
-  for (const directory of path.split(delimiter).filter(Boolean)) {
+  for (const directory of [
+    ...path.split(delimiter).filter(Boolean),
+    ...fallback,
+  ]) {
     for (const extension of [".exe", ".com", ".cmd", ".bat"]) {
       const candidate = join(
         directory.replace(/^"|"$/g, ""),
@@ -30,7 +36,20 @@ async function executableOnPath(name: string): Promise<string> {
   );
 }
 
-export async function resolveCli(name: "claude" | "codex") {
+export async function resolveCli(cli: "claude" | "codex" | "antigravity") {
+  if (cli === "antigravity") {
+    const local = process.env["LOCALAPPDATA"];
+    const path = await executableOnPath(
+      "agy",
+      local ? [join(local, "agy", "bin")] : [],
+    );
+    if (![".exe", ".com"].includes(extname(path).toLowerCase()))
+      throw new Error(
+        "Install the native Antigravity CLI (agy.exe) before opening a session.",
+      );
+    return { executable: path, args: [] };
+  }
+  const name = cli;
   const path = await executableOnPath(name);
   if ([".exe", ".com"].includes(extname(path).toLowerCase()))
     return { executable: path, args: [] };

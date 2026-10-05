@@ -65,9 +65,14 @@ pane have independent bounded scroll jobs. Grid children use min-width/min-heigh
 Below 1100px, supporting content stacks after primary content. Below 700px, the sidebar
 becomes a top navigation band for small-window inspection; main content never overflows.
 
-The simultaneous workbench replaces that support-pane stacking rule: terminal on the
-left (48%), browser above app on the right (50/50). A bounded split tree places stable
-pane elements without remounting their contents. Each leaf owns its scroll; the canvas,
+The tabbed workbench replaces that support-pane stacking rule: one full-width working
+area with Terminal, Code/Documents, and Connectors tabs. Browser/app launch actions
+open a right support split (working area 60%, support 40%); browser and app are peer
+tabs there, with one native surface visible at a time. Closing support restores width.
+Tab strips stay fixed, scroll horizontally when needed, and support arrow/Home/End
+navigation. Inactive content stays mounted to retain PTYs, drafts and web state.
+A bounded split tree places stable pane elements without remounting their contents.
+Explicit terminal splits remain available. Each leaf owns its scroll; the canvas,
 pane title, toolbar, and splitter stay fixed. Splitter hit area is 8px with a neutral
 1px center rule. Splits clamp to 20-80%; pane creation also respects a usable minimum
 of 240px by 160px. At the native 960px minimum window, the sidebar can be hidden.
@@ -93,8 +98,9 @@ Terminal fitting clamps its grid to the IPC contract even during a tiny resize.
 - **Tab**: role tab, selected background, label and close button with independent accessible
   name. Arrow keys move between peers. Dirty documents have an explicit unsaved indicator.
 - **Notice**: inline failure or explanatory message; wrapping text and a recovery action.
-- **Workbench pane**: compact 36px title row, kind label, focused glyph and wash,
-  zoom/close actions, and a bounded body. Browser and application tab groups are independent.
+- **Workbench pane**: compact 36px tab row, selected wash, zoom/close actions,
+  and a bounded body. The primary working pane retains its document editor when
+  a split closes. Browser and application pages retain independent navigation state.
 - **Splitter**: pointer drag with capture, keyboard arrows in 5% steps, Home/End limits,
   and a labelled separator with current size. Continuous resize follows input without motion.
 - **Shortcut help**: searchable key/action rows in a keyboard-dismissable dialog. Native

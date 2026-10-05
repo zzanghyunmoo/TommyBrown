@@ -25,6 +25,7 @@ export function LaunchControls({
         <label className="field">
           사용할 CLI
           <select
+            aria-label="사용할 CLI"
             value={cli}
             onChange={(event) => {
               setCli(event.target.value);
@@ -33,11 +34,13 @@ export function LaunchControls({
           >
             <option value="claude">Claude Code</option>
             <option value="codex">Codex</option>
+            <option value="antigravity">Antigravity</option>
           </select>
         </label>
         <label className="field">
           사용할 모델
           <select
+            aria-label="사용할 모델"
             value={model}
             disabled={!models.length}
             onChange={(event) => {

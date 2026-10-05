@@ -5,6 +5,24 @@ import {
 } from "../../src/main/proxy/profiles";
 
 describe("per-launch CLI routing", () => {
+  it("routes native Antigravity with its OpenAI gateway protocol and selected model", () => {
+    const profile = createLaunchProfile(
+      { cli: "antigravity", model: "gpt-test" },
+      { port: 18317, key: "client-test-key" },
+    );
+    expect(profile.executable).toBe("agy");
+    expect(profile.args).toEqual(["--model", "gpt-test"]);
+    expect(profile.environment).toEqual({
+      AGY_LLM_GATEWAY_URL: "http://127.0.0.1:18317/v1",
+      AGY_LLM_GATEWAY_API_KEY: "client-test-key",
+      AGY_LLM_GATEWAY_WIRE_PROTOCOL: "openai",
+      AGY_LLM_GATEWAY_MODELS: "gpt-test",
+      AGY_LLM_GATEWAY_HEADERS: null,
+      AGY_LLM_GATEWAY_PROXY_URL: null,
+      AGY_LLM_GATEWAY_CA_CERT: null,
+    });
+    expect(powershellLaunch(profile)).toContain("'agy' '--model' 'gpt-test'");
+  });
   it("sends Claude Code to the local gateway and clears conflicting auth backends", () => {
     const profile = createLaunchProfile(
       { cli: "claude", model: "gpt-test" },

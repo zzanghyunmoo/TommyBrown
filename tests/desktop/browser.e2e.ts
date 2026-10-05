@@ -82,6 +82,10 @@ test("embedded web pages are isolated and terminal links open in the right pane"
     await expect(
       web.getByRole("heading", { name: "Browser isolation check" }),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: "브라우저 패널 닫기", exact: true })
+      .click();
+    await expect(page.locator('[data-pane="browser"]')).toBeHidden();
     await page.getByRole("button", { name: "새 세션", exact: true }).click();
     await page.locator(".xterm-screen").click();
     await page.keyboard.type(`Write-Output '${url}'`);
@@ -90,7 +94,7 @@ test("embedded web pages are isolated and terminal links open in the right pane"
       .locator(".xterm-rows > div")
       .filter({ hasText: url })
       .last();
-    await expect(linkRow).toBeVisible();
+    await expect(linkRow).toHaveText(url);
     const linkBounds = await linkRow.boundingBox();
     if (!linkBounds) throw new Error("Terminal link has no visible bounds");
     await page.mouse.move(linkBounds.x + 40, linkBounds.y + 8);
@@ -123,7 +127,7 @@ test("embedded web pages are isolated and terminal links open in the right pane"
       desktop,
       "test-results/native-browser-minimum-width.png",
     );
-    await page.getByRole("button", { name: "코드·문서", exact: true }).click();
+    await page.getByRole("tab", { name: "코드·문서", exact: true }).click();
     await expect(
       page.getByRole("region", { name: "문서 작업 영역" }),
     ).toBeVisible();

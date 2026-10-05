@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { fileRequestSchema } from "../../../shared/workspace";
+import { parseLayout, workingLayout } from "./layout";
 
 const viewSchema = z.object({
+  layoutVersion: z.number().default(1),
+  workMode: z.enum(["terminal", "documents", "connectors"]).default("terminal"),
   page: z.enum(["models", "workspace"]).nullable().default(null),
   pane: z.enum(["documents", "browser", "connectors"]).default("documents"),
   documents: z.array(fileRequestSchema).max(32).default([]),
@@ -34,7 +37,21 @@ type ViewState = z.infer<typeof viewSchema>;
 const key = "tommybrown.view.v1";
 export function readViewState(): ViewState {
   try {
-    return viewSchema.parse(JSON.parse(localStorage.getItem(key) ?? "{}"));
+    const state = viewSchema.parse(
+      JSON.parse(localStorage.getItem(key) ?? "{}"),
+    );
+    if (state.layoutVersion >= 2) return state;
+    return {
+      ...state,
+      layoutVersion: 2,
+      layout: workingLayout(parseLayout(state.layout)),
+      spaceLayouts: Object.fromEntries(
+        Object.entries(state.spaceLayouts).map(([id, layout]) => [
+          id,
+          workingLayout(parseLayout(layout)),
+        ]),
+      ),
+    };
   } catch {
     return viewSchema.parse({});
   }
