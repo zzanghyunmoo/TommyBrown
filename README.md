@@ -69,10 +69,14 @@ Other operating systems and architectures have not been validated.
 ## Development status and verification
 
 The gateway, ADE, connectors, offline vault, and Windows package are implemented.
-Live provider consent, cross-CLI inference/streaming/tool use, authenticated named-service
-integrations, and opening an actual installed Obsidian vault remain unverified.
-The full product goal is therefore still open. See the
-[desktop checkpoint](docs/verification/2026-10-03-desktop-workspace.md).
+An OpenAI account connected by the owner has served real Codex and Claude Code
+responses through the gateway. Claude Code streaming and a real Read tool call passed;
+the isolated Codex file-read check was blocked by local execution policy. See the
+[live CLI checkpoint](docs/verification/2026-10-05-openai-cli.md).
+Claude and Antigravity provider consent, authenticated named-service integrations,
+and opening an actual installed Obsidian vault remain unverified. The full product
+goal is still open. See the [desktop checkpoint](docs/verification/2026-10-03-desktop-workspace.md)
+for the broader implementation and packaged tests.
 
 ```sh
 bun run check
