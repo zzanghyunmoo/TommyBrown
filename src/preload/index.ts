@@ -17,6 +17,7 @@ const appearance: AppearanceBridge = {
 contextBridge.exposeInMainWorld("appearance", appearance);
 
 const bridge: DesktopBridge = {
+  shellName: process.platform === "win32" ? "PowerShell" : "Bash",
   launchSettings: () => ipcRenderer.invoke("models:launch-settings"),
   saveLaunchSelection: (selection) =>
     ipcRenderer.invoke("models:save-launch-selection", selection),

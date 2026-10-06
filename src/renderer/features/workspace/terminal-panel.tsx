@@ -146,7 +146,7 @@ export function TerminalPanel({
               void refreshModels();
             }}
           >
-            <option value="powershell">PowerShell</option>
+            <option value="powershell">{window.desktop.shellName}</option>
             <option value="claude">Claude Code</option>
             <option value="codex">Codex</option>
             <option value="antigravity">Antigravity</option>
@@ -237,11 +237,11 @@ export function TerminalPanel({
       {!sessions.length && (
         <div className="terminal-empty">
           <h2>이 공간에서 작업 시작</h2>
-          <p>PowerShell 또는 코딩 CLI를 선택하고 새 세션을 여세요.</p>
           <p>
-            CLI별 모델 선택은 저장되며, 새 PowerShell에도 저장한 연결을
-            적용합니다.
+            {window.desktop.shellName} 또는 코딩 CLI를 선택하고 새 세션을
+            여세요.
           </p>
+          <p>CLI별 모델 선택은 저장되며, 새 셸에도 저장한 연결을 적용합니다.</p>
         </div>
       )}
     </section>

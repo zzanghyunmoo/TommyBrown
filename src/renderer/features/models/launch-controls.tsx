@@ -98,12 +98,14 @@ export function LaunchControls({
         }}
       >
         <CopyIcon />
-        {copied === copyKey ? "실행 명령 복사됨" : "PowerShell 실행 명령 복사"}
+        {copied === copyKey
+          ? "실행 명령 복사됨"
+          : `${window.desktop.shellName} 실행 명령 복사`}
       </Button>
       {selection.error && <Notice error>{selection.error}</Notice>}
       <p>
-        로컬 게이트웨이 키가 포함된 명령을 복사합니다. 현재 PowerShell에서
-        실행하면 CLI가 종료된 뒤 이전 환경 설정으로 돌아갑니다.
+        로컬 게이트웨이 키가 포함된 명령을 복사합니다. 현재 셸에서 실행하면
+        CLI가 종료된 뒤 이전 환경 설정으로 돌아갑니다.
       </p>
     </div>
   );

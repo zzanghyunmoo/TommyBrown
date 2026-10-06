@@ -5,7 +5,34 @@ A desktop home for coding agents, shared model access, and connected work.
 TommyBrown is under active development. The product contract is in
 [the implementation plan](docs/plans/2026-10-02-tommybrown-desktop.md).
 
-## Run on Windows
+## Downloads
+
+Download the matching archive from [GitHub Releases](https://github.com/zzanghyunmoo/TommyBrown/releases/latest):
+
+| Computer | Archive |
+| --- | --- |
+| Windows x64 | `TommyBrown-0.1.0-windows-x64.zip` |
+| Mac with Apple Silicon | `TommyBrown-0.1.0-macos-arm64.zip` |
+| Mac with Intel | `TommyBrown-0.1.0-macos-x64.zip` |
+
+On Windows, extract the entire ZIP and run `TommyBrown.exe`, keeping the other
+files beside it. On macOS, extract and drag `TommyBrown.app` to Applications.
+The app includes Electron and the Memory server. Install coding CLIs separately;
+the managed model proxy downloads from settings on first use.
+
+These builds have no publisher certificate or Apple notarization. Windows may
+show SmartScreen; macOS may require **System Settings > Privacy & Security >
+Open Anyway** after the first launch attempt. Only approve the app when its source
+and checksum are trusted. Do not disable system-wide security protections.
+SHA-256 files accompany the downloads. There is no automatic updater; replace the
+application with a newer release while retaining its application-data folder.
+
+macOS sessions use Bash and preserve saved model routing and MCP selections.
+CLI discovery includes PATH, Homebrew, `~/.local/bin`, `~/.bun/bin` and
+`~/.agy/bin`. An npm-based CLI needs Node.js available on that PATH.
+Shell functions are local to the session; shell startup files are unchanged.
+
+## Run from source on Windows or macOS
 
 Install Node.js 24 and Bun, then run:
 
@@ -201,16 +228,21 @@ tabs total; closing a terminal pane confirms before ending its running sessions.
 The primary working area stays mounted; its close action closes the active tab.
 Arrow keys and Home/End switch working-area and right-side tabs.
 
-## Windows package
+## Native packages
 
 ```sh
-bun run package:windows
+bun run package:desktop
+bun run test:release
+bun run archive:release
 ```
 
-The command writes `release/windows-<timestamp>/TommyBrown-win32-x64/`.
-Run `TommyBrown.exe` from that folder and keep its companion files together. This is
-an unsigned Windows x64 development build, not an installer or an auto-updating release.
-Other operating systems and architectures have not been validated.
+Build on the target OS and architecture. `release/package.json` records the
+package path; `release/assets/` contains the portable ZIP and its SHA-256 file.
+`package:windows` remains available for local Windows development builds.
+The Desktop packages GitHub Actions workflow builds on Windows x64, macOS arm64
+and macOS x64. Each job launches its packaged app, opens a real PTY, calls Memory,
+installs/starts the verified proxy and checks saved state after restart before
+uploading an archive. Release publication uses these verified artifacts.
 
 ## Development status and verification
 

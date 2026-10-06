@@ -3,17 +3,21 @@ import type { LaunchProfile } from "../../shared/launch";
 import type { LaunchSettings } from "../../shared/launch-settings";
 import type { ConnectorSession } from "../connectors/profiles";
 import type { ModelService } from "../models";
+import { bashProfile, quotePosix } from "./posix";
 import { powerShellProfile } from "./powershell";
 import { resolveCli } from "./resolve-cli";
 
 export async function shellProfile(
-  models: ModelService,
+  models: Pick<ModelService, "launchProfile">,
   settings: LaunchSettings,
   connectors?: ConnectorSession,
 ): Promise<LaunchProfile> {
   const environment: Record<string, string | null> = {};
   const commands: string[] = [];
-  const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
+  const windows = process.platform === "win32";
+  const quote = windows
+    ? (value: string) => `'${value.replaceAll("'", "''")}'`
+    : quotePosix;
   for (const cli of ["codex", "claude", "antigravity"] as const) {
     const model = settings.models[cli];
     if (!model && !connectors) continue;
@@ -36,8 +40,12 @@ export async function shellProfile(
       ]
         .map(quote)
         .join(" ");
-      commands.push(`function global:${name} { & ${command} @args }`);
-      if (cli === "antigravity") {
+      commands.push(
+        windows
+          ? `function global:${name} { & ${command} @args }`
+          : `${name}() { ${command} "$@"; }\nexport -f ${name}`,
+      );
+      if (cli === "antigravity" && windows) {
         const path =
           Object.entries(process.env).find(
             ([key]) => key.toLowerCase() === "path",
@@ -48,11 +56,19 @@ export async function shellProfile(
     } catch (error) {
       if (!(error instanceof Error)) throw error;
       commands.push(
-        `function global:${name} { throw ${quote(error.message)} }`,
+        windows
+          ? `function global:${name} { throw ${quote(error.message)} }`
+          : `${name}() { printf '%s\\n' ${quote(error.message)} >&2; return 127; }\nexport -f ${name}`,
       );
     }
     if (cli === "antigravity")
-      commands.push("Set-Alias -Scope Global antigravity agy");
+      commands.push(
+        windows
+          ? "Set-Alias -Scope Global antigravity agy"
+          : 'antigravity() { agy "$@"; }\nexport -f antigravity',
+      );
   }
-  return powerShellProfile(environment, commands);
+  return windows
+    ? powerShellProfile(environment, commands)
+    : bashProfile(environment, commands);
 }

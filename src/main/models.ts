@@ -16,6 +16,7 @@ import { powershellLaunch } from "./proxy/profiles";
 import { ModelRouting } from "./proxy/routing";
 import { ProxyRuntime } from "./proxy/runtime";
 import { loadGatewayKeys } from "./secrets";
+import { posixLaunch } from "./terminal/posix";
 import { resolveCli } from "./terminal/resolve-cli";
 
 export class ModelService {
@@ -219,7 +220,7 @@ export class ModelService {
     const profile = await this.launchProfile(request);
     const target = await resolveCli(request.cli);
     clipboard.writeText(
-      powershellLaunch({
+      (process.platform === "win32" ? powershellLaunch : posixLaunch)({
         ...profile,
         executable: target.executable,
         args: [...target.args, ...profile.args],
