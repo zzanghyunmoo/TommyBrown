@@ -51,6 +51,8 @@ export const terminalResizeSchema = z.object({
 });
 
 export interface TerminalBridge {
+  readonly readClipboard: () => Promise<string>;
+  readonly writeClipboard: (text: string) => Promise<void>;
   readonly launch: (request: TerminalLaunch) => Promise<TerminalInfo>;
   readonly list: () => Promise<readonly TerminalInfo[]>;
   readonly attach: (id: string) => Promise<TerminalBuffer>;

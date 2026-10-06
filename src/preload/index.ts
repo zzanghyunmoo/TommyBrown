@@ -61,6 +61,9 @@ const workbench: WorkbenchBridge = {
 contextBridge.exposeInMainWorld("workbench", workbench);
 
 const terminal: TerminalBridge = {
+  readClipboard: () => ipcRenderer.invoke("terminal:clipboard-read"),
+  writeClipboard: (text) =>
+    ipcRenderer.invoke("terminal:clipboard-write", text),
   launch: (request) => ipcRenderer.invoke("terminal:launch", request),
   list: () => ipcRenderer.invoke("terminal:list"),
   attach: (id) => ipcRenderer.invoke("terminal:attach", id),
