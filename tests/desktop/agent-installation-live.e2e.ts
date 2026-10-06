@@ -69,6 +69,7 @@ test("official installers work on a disposable native runner and remain discover
         verified?.phase,
         `${id}: ${verified?.message}\n${verified?.log}`,
       ).toBe("installed");
+      await expect(card.getByText("설치됨", { exact: true })).toBeVisible();
       await card.scrollIntoViewIfNeeded();
       await nativeCapture(
         desktop,
@@ -89,6 +90,13 @@ test("official installers work on a disposable native runner and remain discover
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
     await page.getByLabel("CLI", { exact: true }).selectOption("powershell");
     await page.getByRole("button", { name: "새 세션", exact: true }).click();
+    await expect
+      .poll(() => page.evaluate(() => window.terminal.list()))
+      .toHaveLength(1);
+    await expect(page.locator(".xterm-rows")).toContainText(
+      process.platform === "win32" ? "PS " : /[$>]/,
+      { timeout: 15_000 },
+    );
     for (const [id, command] of [
       ["codex", "codex"],
       ["claude", "claude"],
