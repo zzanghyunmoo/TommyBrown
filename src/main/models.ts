@@ -1,17 +1,9 @@
 import { join } from "node:path";
-import { setTimeout as delay } from "node:timers/promises";
 import { clipboard, shell } from "electron";
 import type { ModelSnapshot } from "../shared/bridge";
 import { launchRequestSchema } from "../shared/launch";
-import {
-  claudeShortcuts,
-  modelMappingsSchema,
-  type ProviderModels,
-  providerLabels,
-  providers,
-  resolveMapping,
-} from "../shared/model-mappings";
-import type { Provider, ProxyAccount, ProxyLogin } from "../shared/proxy";
+import { modelMappingsSchema } from "../shared/model-mappings";
+import type { Provider, ProxyLogin } from "../shared/proxy";
 import { GatewayError, providerSchema } from "../shared/proxy";
 import type { ProxyKeys } from "./proxy/config";
 import { PROXY_VERSION, ProxyInstaller } from "./proxy/installer";
@@ -19,11 +11,12 @@ import {
   compileAliases,
   ModelMappingStore,
   mappingRevision,
-  modelAlias,
 } from "./proxy/model-mappings";
-import { createLaunchProfile, powershellLaunch } from "./proxy/profiles";
+import { powershellLaunch } from "./proxy/profiles";
+import { ModelRouting } from "./proxy/routing";
 import { ProxyRuntime } from "./proxy/runtime";
 import { loadGatewayKeys } from "./secrets";
+import { resolveCli } from "./terminal/resolve-cli";
 
 export class ModelService {
   private installed = false;
@@ -33,19 +26,22 @@ export class ModelService {
   private loginError: string | null = null;
   private readonly installer: ProxyInstaller;
   private queue: Promise<void> = Promise.resolve();
+  private readonly routing: ModelRouting;
+  private startupError: string | null = null;
 
   private constructor(
     directory: string,
     private readonly runtime: ProxyRuntime,
-    private readonly keys: ProxyKeys,
+    keys: ProxyKeys,
     private readonly mappings: ModelMappingStore,
   ) {
     this.installer = new ProxyInstaller(
       join(directory, "engine", PROXY_VERSION),
     );
+    this.routing = new ModelRouting(runtime, keys, mappings);
   }
 
-  static async create(directory: string) {
+  static async create(directory: string, port = 8317) {
     const keys = await loadGatewayKeys(directory);
     const installer = new ProxyInstaller(
       join(directory, "engine", PROXY_VERSION),
@@ -60,6 +56,14 @@ export class ModelService {
     );
     const service = new ModelService(directory, runtime, keys, mappings);
     service.installed = await installer.isInstalled();
+    if (service.installed) {
+      try {
+        await service.start(port);
+      } catch (error) {
+        if (!(error instanceof GatewayError)) throw error;
+        service.startupError = error.message;
+      }
+    }
     return service;
   }
 
@@ -95,9 +99,9 @@ export class ModelService {
       models: models.filter((model) => !model.id.startsWith("tb-")),
       mappings: this.mappings.snapshot(),
       mappingRevision: mappingRevision(this.mappings.snapshot()),
-      providerModels: await this.providerModels(accounts),
+      providerModels: await this.routing.providerModels(accounts),
       login: this.pending ?? null,
-      loginError: this.loginError,
+      loginError: this.loginError ?? this.startupError,
     };
   }
 
@@ -114,6 +118,7 @@ export class ModelService {
           "Install the verified gateway engine first.",
         );
       await this.runtime.start(port, compileAliases(this.mappings.snapshot()));
+      this.startupError = null;
     });
   }
 
@@ -163,31 +168,6 @@ export class ModelService {
     });
   }
 
-  private async providerModels(
-    accounts: readonly ProxyAccount[],
-  ): Promise<ProviderModels> {
-    const catalog: Record<Provider, string[]> = {
-      codex: [],
-      claude: [],
-      antigravity: [],
-    };
-    await Promise.all(
-      accounts
-        .filter((account) => !account.disabled)
-        .map(async (account) => {
-          const provider = providerSchema.safeParse(account.provider);
-          if (!provider.success) return;
-          const models = await this.runtime
-            .client()
-            .accountModels(account.name);
-          catalog[provider.data].push(...models.map((model) => model.id));
-        }),
-    );
-    for (const provider of providers)
-      catalog[provider] = [...new Set(catalog[provider])].sort();
-    return catalog;
-  }
-
   async login(input: unknown): Promise<ProxyLogin> {
     const provider = providerSchema.parse(input);
     if (this.pending)
@@ -235,111 +215,20 @@ export class ModelService {
   }
 
   async copyLaunch(input: unknown): Promise<void> {
-    clipboard.writeText(powershellLaunch(await this.launchProfile(input)));
+    const request = launchRequestSchema.parse(input);
+    const profile = await this.launchProfile(request);
+    const target = await resolveCli(request.cli);
+    clipboard.writeText(
+      powershellLaunch({
+        ...profile,
+        executable: target.executable,
+        args: [...target.args, ...profile.args],
+      }),
+    );
   }
 
   async launchProfile(input: unknown) {
-    const request = launchRequestSchema.parse(input);
-    return this.serialize(async () => {
-      const gateway = this.runtime.status;
-      if (gateway.phase !== "running")
-        throw new GatewayError(
-          "runtime",
-          "Start the gateway before configuring a CLI.",
-        );
-      const settings = this.mappings.snapshot();
-      if (
-        request.mappingRevision &&
-        request.mappingRevision !== mappingRevision(settings)
-      )
-        throw new GatewayError(
-          "configuration",
-          "모델 매핑이 변경되었습니다. 모델 목록을 다시 열어 실행 경로를 확인해 주세요.",
-        );
-      const target = resolveMapping(settings, request.cli, request.model);
-      if (target) {
-        const catalog = await this.providerModels(
-          await this.runtime.client().accounts(),
-        );
-        const alias = await this.availableAlias(
-          target.provider,
-          target.model,
-          catalog,
-        );
-        const profile = createLaunchProfile(
-          { ...request, model: alias },
-          { port: gateway.port, key: this.keys.client },
-        );
-        if (request.cli !== "claude") return profile;
-        const shortcuts: Record<string, string> = {};
-        for (const shortcut of claudeShortcuts) {
-          const row = settings.rows.find(
-            (candidate) => candidate.claudeShortcut === shortcut,
-          );
-          const model = row?.models[target.provider];
-          if (row && !model)
-            throw new GatewayError(
-              "configuration",
-              `${shortcut} 단축 이름에 ${providerLabels[target.provider]} 모델을 연결해 주세요.`,
-            );
-          shortcuts[`ANTHROPIC_DEFAULT_${shortcut.toUpperCase()}_MODEL`] = model
-            ? await this.availableAlias(target.provider, model, catalog)
-            : alias;
-        }
-        return {
-          ...profile,
-          environment: { ...profile.environment, ...shortcuts },
-        };
-      }
-      const available = await this.runtime.client().models();
-      if (
-        request.model.startsWith("tb-") ||
-        !available.some((model) => model.id === request.model)
-      )
-        throw new GatewayError(
-          "configuration",
-          "Select a model available from your connected accounts.",
-        );
-      return createLaunchProfile(request, {
-        port: gateway.port,
-        key: this.keys.client,
-      });
-    });
-  }
-
-  private async availableAlias(
-    provider: Provider,
-    model: string,
-    catalog: ProviderModels,
-  ): Promise<string> {
-    if (!catalog[provider].includes(model))
-      throw new GatewayError(
-        "configuration",
-        `${providerLabels[provider]} 계정에서 ${model} 모델을 사용할 수 없습니다. 계정과 모델 ID를 확인해 주세요.`,
-      );
-    const alias = modelAlias(provider, model);
-    for (let attempt = 0; attempt < 15; attempt++) {
-      if (catalog[provider].includes(alias)) {
-        if (
-          providers.some(
-            (other) => other !== provider && catalog[other].includes(alias),
-          )
-        )
-          throw new GatewayError(
-            "configuration",
-            "다른 제공자와 모델 매핑 이름이 충돌합니다. 계정의 별칭 설정을 확인해 주세요.",
-          );
-        return alias;
-      }
-      await delay(100);
-      catalog = await this.providerModels(
-        await this.runtime.client().accounts(),
-      );
-    }
-    throw new GatewayError(
-      "configuration",
-      "모델 매핑이 아직 게이트웨이에 반영되지 않았습니다. 설정을 다시 저장해 주세요.",
-    );
+    return this.serialize(() => this.routing.launchProfile(input));
   }
 
   private serialize<T>(operation: () => Promise<T>): Promise<T> {

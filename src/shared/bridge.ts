@@ -1,4 +1,5 @@
 import type { LaunchRequest } from "./launch";
+import type { LaunchSelection, LaunchSettings } from "./launch-settings";
 import type { ModelMappings, ProviderModels } from "./model-mappings";
 import type {
   GatewayStatus,
@@ -25,6 +26,10 @@ export type ModelSnapshot = {
 };
 
 export interface DesktopBridge {
+  readonly launchSettings: () => Promise<LaunchSettings>;
+  readonly saveLaunchSelection: (
+    selection: LaunchSelection,
+  ) => Promise<LaunchSettings>;
   readonly snapshot: () => Promise<ModelSnapshot>;
   readonly install: () => Promise<void>;
   readonly start: () => Promise<void>;

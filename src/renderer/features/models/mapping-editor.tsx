@@ -39,7 +39,7 @@ export function MappingEditor({
         name: "Astra · Fable",
         codex: "astra",
         claude: "fable",
-        claudeShortcut: null,
+        claudeShortcut: "fable",
       },
       {
         name: "Terra · Opus",

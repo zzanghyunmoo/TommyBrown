@@ -40,6 +40,7 @@ export function createLaunchProfile(
         CLAUDE_CODE_USE_BEDROCK: null,
         CLAUDE_CODE_USE_VERTEX: null,
         CLAUDE_CODE_USE_FOUNDRY: null,
+        ANTHROPIC_DEFAULT_FABLE_MODEL: model,
         ANTHROPIC_DEFAULT_OPUS_MODEL: model,
         ANTHROPIC_DEFAULT_SONNET_MODEL: model,
         ANTHROPIC_DEFAULT_HAIKU_MODEL: model,

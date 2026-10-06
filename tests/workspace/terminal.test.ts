@@ -14,8 +14,10 @@ it.skipIf(process.platform !== "win32")(
     if (!state.selectedSpace) throw new Error("Missing space");
     const terminal = new TerminalService(
       store,
-      async () => {
-        throw new Error("Unexpected routed model");
+      {
+        model: async () => {
+          throw new Error("Unexpected routed model");
+        },
       },
       () => undefined,
     );

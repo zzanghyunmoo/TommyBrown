@@ -16,12 +16,21 @@ bun run start
 ```
 
 In Model access, install the engine, start the gateway, and connect an account in
-your browser. Open a workspace, choose Claude Code, Codex, or Antigravity and a discovered model,
-then start a terminal session. Routing applies to that session only. Install the chosen
+your browser. On subsequent app launches, the installed gateway starts automatically
+with the saved accounts and mappings. Open a workspace, choose Claude Code, Codex, or
+Antigravity and a discovered model, then start a terminal session. CLI and model choices
+are saved separately for each CLI. Install the chosen
 CLI separately using its native installer or standard npm package; npm installations
 also need Node.js on PATH. Custom shell wrappers are not supported.
 Antigravity uses the native `agy` executable. Its selected model uses the gateway's
 OpenAI-compatible endpoint without changing global CLI settings.
+
+New in-app PowerShell sessions apply the saved Claude and Antigravity model choices.
+Run `claude`, `agy`, or `antigravity` there; Antigravity is also found in its native
+Windows installation directory when the app inherited an older PATH. Choose **CLI existing
+settings** to clear that CLI's saved routing. Reopen a session after changing its settings.
+PowerShell has a colored prompt and PSReadLine syntax highlighting when available.
+All terminal processes receive 256-color/truecolor capabilities, with light and dark ANSI palettes.
 
 The model-access page can also copy an opt-in PowerShell command for an external
 terminal. That command contains a local gateway key and restores the previous
@@ -32,10 +41,12 @@ IDs in a row, then choose the execution provider for each CLI. The model selecto
 uses that CLI's source column and previews the target provider and model before
 launch. Both directions between every provider pair are supported. Example rows
 are editable shorthand; replace execution targets with actual IDs from your account.
-Claude's Opus, Sonnet, and Haiku shortcuts can be assigned to rows; unassigned
+Claude's Fable, Opus, Sonnet, and Haiku shortcuts can be assigned to rows; unassigned
 shortcuts use the selected session model. Settings persist after restart. Reopen
 CLI sessions after changing mappings, and refresh the model selector if its preview
 is outdated. See the [mapping guide](docs/solutions/architecture-patterns/provider-model-mapping.md).
+Selecting `fable` preserves that Claude shortcut while its configured execution
+provider receives the corresponding mapped model.
 
 The gateway uses loopback port 8317. An occupied port produces an error; TommyBrown
 does not stop other applications. Closing TommyBrown stops its own gateway.
@@ -117,6 +128,8 @@ Other operating systems and architectures have not been validated.
 The tabbed workspace supersedes the initial simultaneous three-pane default.
 See the [tabbed workspace checkpoint](docs/verification/2026-10-05-tabbed-workspace.md)
 for Antigravity routing, native captures, restart behavior and compact-window validation.
+See the [CLI restart checkpoint](docs/verification/2026-10-06-cli-restart-and-colors.md)
+for automatic gateway startup, saved PowerShell routing, Fable, and terminal colors.
 
 The gateway, ADE, connectors, offline vault, and Windows package are implemented.
 An OpenAI account connected by the owner has served real Codex and Claude Code
