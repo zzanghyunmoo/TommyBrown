@@ -1,4 +1,4 @@
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { IpcMainInvokeEvent } from "electron";
 import {
@@ -19,6 +19,7 @@ import { BrowserService } from "./browser/service";
 import { McpGateway } from "./connectors/gateway";
 import { ConnectorProfiles } from "./connectors/profiles";
 import { registerConnectors } from "./connectors/register";
+import { configureDataDirectory } from "./data-directory";
 import { ModelService } from "./models";
 import { LaunchSettingsStore } from "./proxy/launch-settings";
 import { registerModels } from "./proxy/register";
@@ -31,8 +32,7 @@ import { WorkspaceStore } from "./workspace/store";
 import { VaultService } from "./workspace/vault";
 
 app.setName("TommyBrown");
-const customData = process.env["TOMMYBROWN_DATA_DIR"];
-if (customData) app.setPath("userData", resolve(customData));
+configureDataDirectory(app, process.env["TOMMYBROWN_DATA_DIR"]);
 const hasLock = app.requestSingleInstanceLock();
 if (!hasLock) app.quit();
 else

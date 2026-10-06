@@ -11,9 +11,9 @@ Download the matching archive from [GitHub Releases](https://github.com/zzanghyu
 
 | Computer | Archive |
 | --- | --- |
-| Windows x64 | `TommyBrown-0.1.0-windows-x64.zip` |
-| Mac with Apple Silicon | `TommyBrown-0.1.0-macos-arm64.zip` |
-| Mac with Intel | `TommyBrown-0.1.0-macos-x64.zip` |
+| Windows x64 | `TommyBrown-0.1.1-windows-x64.zip` |
+| Mac with Apple Silicon | `TommyBrown-0.1.1-macos-arm64.zip` |
+| Mac with Intel | `TommyBrown-0.1.1-macos-x64.zip` |
 
 On Windows, extract the entire ZIP and run `TommyBrown.exe`, keeping the other
 files beside it. On macOS, extract and drag `TommyBrown.app` to Applications.
@@ -26,6 +26,16 @@ Open Anyway** after the first launch attempt. Only approve the app when its sour
 and checksum are trusted. Do not disable system-wide security protections.
 SHA-256 files accompany the downloads. There is no automatic updater; replace the
 application with a newer release while retaining its application-data folder.
+
+From 0.1.1, packaged releases keep their settings in `TommyBrown Desktop` under
+the OS application-data directory (`%APPDATA%` on Windows or
+`~/Library/Application Support` on macOS). Development runs keep the original
+`TommyBrown` profile. A release starts without development workspaces, vaults,
+accounts or browser sessions, then restores its own saved settings on later runs.
+The shared 0.1.0/development profile stays on disk and is not imported or deleted.
+After upgrading from 0.1.0, select spaces and connect accounts in the new profile.
+An explicit `TOMMYBROWN_DATA_DIR` still selects a custom profile for both app state
+and browser storage.
 
 macOS sessions use Bash and preserve saved model routing and MCP selections.
 CLI discovery includes PATH, Homebrew, `~/.local/bin`, `~/.bun/bin` and
