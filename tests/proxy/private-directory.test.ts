@@ -34,7 +34,14 @@ it.skipIf(process.platform !== "win32")(
         {
           windowsHide: true,
           timeout: 10_000,
-          env: { ...process.env, TOMMYBROWN_PRIVATE_DIRECTORY: target },
+          env: {
+            ...Object.fromEntries(
+              Object.entries(process.env).filter(
+                ([key]) => key.toUpperCase() !== "PSMODULEPATH",
+              ),
+            ),
+            TOMMYBROWN_PRIVATE_DIRECTORY: target,
+          },
         },
       );
       expect(result.stdout.trim()).toBe("private-access-verified");
