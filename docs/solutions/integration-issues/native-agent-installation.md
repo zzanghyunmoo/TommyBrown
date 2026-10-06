@@ -34,6 +34,11 @@ interpreters with argument arrays in a unique temporary directory. Official scri
 perform their payload checksum checks. Scope execution-policy changes to the child
 PowerShell process. Do not pass renderer-provided commands or URLs to the installer.
 
+When spawning Windows PowerShell 5.1 from an app started by PowerShell 7, remove the
+inherited `PSModulePath` from the installer child's environment (case-insensitively).
+Otherwise the official Codex installer can fail to find `Get-FileHash` when verifying
+its payload. Let the chosen native interpreter establish its own module paths.
+
 Cancellation and timeouts terminate the process tree. During app shutdown, stop the
 installer after the unsaved-document decision, so choosing to keep editing leaves the
 service usable. Installation does not sign in or modify TommyBrown model mappings.

@@ -111,7 +111,11 @@ export async function installAgent(
       timeout: 10 * 60_000,
       log,
       env: {
-        ...process.env,
+        ...Object.fromEntries(
+          Object.entries(process.env).filter(
+            ([key]) => !windows || key.toUpperCase() !== "PSMODULEPATH",
+          ),
+        ),
         CODEX_NON_INTERACTIVE: "1",
         ...(windows ? {} : { PATH: desktopPath() }),
       },
