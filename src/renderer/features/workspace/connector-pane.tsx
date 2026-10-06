@@ -4,6 +4,7 @@ import {
   type ConnectorCheck,
   connectorInputSchema,
   connectorPresets,
+  type McpGatewayStatus,
 } from "../../../shared/connectors";
 import { Button, Notice } from "../../components/primitives";
 import { ConnectorTools } from "./connector-tools";
@@ -20,10 +21,19 @@ export function ConnectorPane({
   >({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const [gateway, setGateway] = useState<McpGatewayStatus>();
   const preset =
     connectorPresets.find((item) => item.kind === kind) ?? connectorPresets[0];
   useEffect(() => {
     let active = true;
+    window.connectors
+      .gateway()
+      .then((status) => {
+        if (active) setGateway(status);
+      })
+      .catch((failure: unknown) => {
+        if (active && failure instanceof Error) setError(failure.message);
+      });
     window.connectors
       .list()
       .then((list) => {
@@ -80,6 +90,18 @@ export function ConnectorPane({
           도구를 사용할 수 있습니다.
         </p>
       </header>
+      <p role="status">
+        MCP 게이트웨이 ·{" "}
+        {gateway ? (gateway.running ? "실행 중" : "중지됨") : "확인 중"}
+      </p>
+      <p>
+        터미널에서 선택한 커넥터를 Claude Code, Codex, Antigravity가 공통으로
+        사용합니다. PowerShell에서 실행한 CLI에도 적용됩니다.
+      </p>
+      <p>
+        Antigravity 1.2.17을 OpenAI 모델에 연결하면 MCP 도구 목록은 표시되지만,
+        CLI 제약으로 도구를 호출할 수 없습니다.
+      </p>
       {error && <Notice error>{error}</Notice>}
       <form
         className="connector-form"

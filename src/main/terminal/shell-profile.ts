@@ -1,6 +1,7 @@
 import { delimiter, dirname } from "node:path";
 import type { LaunchProfile } from "../../shared/launch";
 import type { LaunchSettings } from "../../shared/launch-settings";
+import type { ConnectorSession } from "../connectors/profiles";
 import type { ModelService } from "../models";
 import { powerShellProfile } from "./powershell";
 import { resolveCli } from "./resolve-cli";
@@ -8,19 +9,31 @@ import { resolveCli } from "./resolve-cli";
 export async function shellProfile(
   models: ModelService,
   settings: LaunchSettings,
+  connectors?: ConnectorSession,
 ): Promise<LaunchProfile> {
   const environment: Record<string, string | null> = {};
   const commands: string[] = [];
   const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
-  for (const cli of ["claude", "antigravity"] as const) {
+  for (const cli of ["codex", "claude", "antigravity"] as const) {
     const model = settings.models[cli];
-    if (!model) continue;
-    const name = cli === "antigravity" ? "agy" : "claude";
+    if (!model && !connectors) continue;
+    const name = cli === "antigravity" ? "agy" : cli;
     try {
-      const profile = await models.launchProfile({ cli, model });
+      const profile = model
+        ? await models.launchProfile({ cli, model })
+        : { args: [], environment: {} };
+      const connector = connectors?.profile(cli) ?? {
+        args: [],
+        environment: {},
+      };
       const target = await resolveCli(cli);
-      Object.assign(environment, profile.environment);
-      const command = [target.executable, ...target.args, ...profile.args]
+      Object.assign(environment, profile.environment, connector.environment);
+      const command = [
+        target.executable,
+        ...target.args,
+        ...profile.args,
+        ...connector.args,
+      ]
         .map(quote)
         .join(" ");
       commands.push(`function global:${name} { & ${command} @args }`);

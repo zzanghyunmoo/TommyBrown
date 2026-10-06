@@ -160,8 +160,6 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
       endpoint,
     );
     if (!connector) throw new Error("No connector");
-    const name = `tommybrown_${connector.id.replaceAll("-", "")}`;
-    const variable = `${name.toUpperCase()}_TOKEN`;
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
     await page.getByLabel("CLI", { exact: true }).selectOption("claude");
     await page.locator(".terminal-connectors summary").click();
@@ -171,7 +169,7 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
       tokens: z.record(z.string(), z.string()),
       electronFlag: z.null(),
     });
-    for (const cli of ["claude", "codex"] as const) {
+    for (const cli of ["claude", "codex", "antigravity"] as const) {
       await page.getByLabel("CLI", { exact: true }).selectOption(cli);
       await page.getByLabel("모델", { exact: true }).selectOption("");
       await page.getByRole("button", { name: "새 세션", exact: true }).click();
@@ -183,29 +181,54 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
       const record = recordSchema.parse(
         JSON.parse(await readFile(capture, "utf8")),
       );
-      expect(record.tokens).toEqual({ [variable]: "fixture-token" });
-      if (cli === "claude")
-        expect(record.args).toEqual([
-          "--mcp-config",
-          JSON.stringify({
-            mcpServers: {
-              [name]: {
-                type: "http",
-                url: endpoint,
-                headers: { Authorization: `Bearer \${${variable}}` },
-              },
-            },
-          }),
-        ]);
-      else
+      expect(JSON.stringify(record)).not.toContain("fixture-token");
+      expect(JSON.stringify(record)).not.toContain(endpoint);
+      if (cli === "codex") {
+        expect(record.tokens["TOMMYBROWN_MCP_TOKEN"]).toMatch(
+          /^[a-zA-Z0-9_-]{43}$/,
+        );
+        expect(record.args[1]).toMatch(
+          /^mcp_servers\.tommybrown\.url="http:\/\/127\.0\.0\.1:\d+\/mcp"$/,
+        );
         expect(record.args).toEqual([
           "-c",
-          `mcp_servers.${name}.url=${JSON.stringify(endpoint)}`,
+          record.args[1],
           "-c",
-          `mcp_servers.${name}.bearer_token_env_var=${JSON.stringify(variable)}`,
+          'mcp_servers.tommybrown.bearer_token_env_var="TOMMYBROWN_MCP_TOKEN"',
         ]);
+      } else {
+        expect(record.tokens).toEqual({});
+        expect(record.args).toHaveLength(2);
+        expect(record.args[0]).toBe(
+          cli === "claude" ? "--mcp-config" : "--add-dir",
+        );
+        const path = record.args[1];
+        if (!path) throw new Error("No managed MCP configuration");
+        const configPath =
+          cli === "claude"
+            ? path
+            : resolve(path, ".agents/plugins/tommybrown/mcp_config.json");
+        const config = z
+          .object({
+            mcpServers: z.object({
+              tommybrown: z.object({
+                url: z.string(),
+                headers: z.object({ Authorization: z.string() }),
+              }),
+            }),
+          })
+          .parse(JSON.parse(await readFile(configPath, "utf8")));
+        expect(config.mcpServers.tommybrown.url).toMatch(
+          /^http:\/\/127\.0\.0\.1:\d+\/mcp$/,
+        );
+        expect(config.mcpServers.tommybrown.headers.Authorization).toMatch(
+          /^Bearer [a-zA-Z0-9_-]{43}$/,
+        );
+        expect(JSON.stringify(config)).not.toContain("fixture-token");
+        expect(JSON.stringify(config)).not.toContain(endpoint);
+      }
       await test.step(`${cli} closes its process tree`, async () => {
-        if (cli === "codex") {
+        if (cli === "antigravity") {
           await page.evaluate(
             (id) => window.connectors.disconnect(id),
             connector.id,
@@ -220,19 +243,7 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
           .toEqual([]);
       });
     }
-    await page.getByLabel("CLI", { exact: true }).selectOption("antigravity");
-    await expect(page.locator(".terminal-connectors")).toHaveCount(0);
-    await page.getByRole("button", { name: "새 세션", exact: true }).click();
-    await expect(page.locator(".xterm-rows")).toContainText("cli-shim-ready");
-    expect(
-      recordSchema.parse(JSON.parse(await readFile(capture, "utf8"))).args,
-    ).toEqual([]);
-    await page
-      .getByRole("button", { name: "antigravity 1 종료", exact: true })
-      .click();
-    await expect
-      .poll(() => page.evaluate(() => window.terminal.list()))
-      .toEqual([]);
+    await expect(page.locator(".terminal-connectors")).toHaveCount(1);
   } finally {
     await desktop.close();
   }

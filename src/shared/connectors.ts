@@ -58,12 +58,17 @@ export type ConnectorCheck = {
   readonly tools: readonly ConnectorTool[];
   readonly checkedAt: string;
 };
+export type McpGatewayStatus = {
+  readonly running: boolean;
+  readonly sessions: number;
+};
 export const connectorCallSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1).max(200),
   arguments: z.record(z.string(), z.unknown()),
 });
 export interface ConnectorBridge {
+  readonly gateway: () => Promise<McpGatewayStatus>;
   readonly list: () => Promise<readonly Connector[]>;
   readonly add: (input: ConnectorInput) => Promise<readonly Connector[]>;
   readonly disconnect: (id: string) => Promise<readonly Connector[]>;

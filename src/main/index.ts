@@ -15,7 +15,8 @@ import { themeCanvas } from "../shared/appearance";
 import { browserGroupSchema } from "../shared/browser";
 import { AppearanceStore } from "./appearance";
 import { BrowserService } from "./browser/service";
-import { connectorProfile } from "./connectors/profiles";
+import { McpGateway } from "./connectors/gateway";
+import { ConnectorProfiles } from "./connectors/profiles";
 import { registerConnectors } from "./connectors/register";
 import { ModelService } from "./models";
 import { LaunchSettingsStore } from "./proxy/launch-settings";
@@ -136,6 +137,13 @@ async function boot(): Promise<void> {
     bind,
     (id) => terminals.disconnectConnector(id),
   );
+  const mcpGateway = new McpGateway(connectors);
+  await mcpGateway.start();
+  const connectorProfiles = await ConnectorProfiles.open(
+    app.getPath("userData"),
+    mcpGateway,
+  );
+  bind("connectors:gateway", () => mcpGateway.status());
   bind("appearance:get", () => appearance.get());
   bind("appearance:set", async (input) => {
     const theme = await appearance.set(input);
@@ -147,8 +155,9 @@ async function boot(): Promise<void> {
     spaces,
     {
       model: (request) => models.launchProfile(request),
-      connectors: (cli, ids) => connectorProfile(connectors, cli, ids),
-      shell: () => shellProfile(models, launchSettings.snapshot()),
+      connectors: (ids) => connectorProfiles.create(ids),
+      shell: (session) =>
+        shellProfile(models, launchSettings.snapshot(), session),
     },
     (event) => {
       if (!window.webContents.isDestroyed())
@@ -237,6 +246,7 @@ async function boot(): Promise<void> {
           if (answer.response !== 1) return;
         }
         await terminals.stop();
+        await mcpGateway.stop();
         browser.stop();
         await models.stop();
         closing = true;

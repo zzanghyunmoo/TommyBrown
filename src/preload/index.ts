@@ -98,6 +98,7 @@ const browser: BrowserBridge = {
 };
 contextBridge.exposeInMainWorld("browser", browser);
 const connectors: ConnectorBridge = {
+  gateway: () => ipcRenderer.invoke("connectors:gateway"),
   list: () => ipcRenderer.invoke("connectors:list"),
   add: (input) => ipcRenderer.invoke("connectors:add", input),
   disconnect: (id) => ipcRenderer.invoke("connectors:disconnect", id),
