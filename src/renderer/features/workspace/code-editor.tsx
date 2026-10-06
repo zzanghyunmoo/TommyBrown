@@ -5,18 +5,27 @@ import "monaco-editor/languages/definitions/javascript/register.js";
 import "monaco-editor/languages/definitions/markdown/register.js";
 import "monaco-editor/languages/definitions/python/register.js";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { currentTheme, subscribeTheme, themeColor } from "../../theme";
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
-monaco.editor.defineTheme("tommybrown", {
-  base: "vs",
-  inherit: true,
-  rules: [],
-  colors: {
-    "editor.background": "#fcfbf8",
-    "editor.lineHighlightBackground": "#f1efea",
-    "editorLineNumber.foreground": "#99928a",
-  },
-});
+function applyEditorTheme(): string {
+  const name = `tommybrown-${currentTheme()}`;
+  monaco.editor.defineTheme(name, {
+    base: currentTheme() === "dark" ? "vs-dark" : "vs",
+    inherit: true,
+    rules: [],
+    colors: {
+      "editor.background": themeColor("--paper"),
+      "editor.foreground": themeColor("--ink"),
+      "editor.lineHighlightBackground": themeColor("--wash"),
+      "editorLineNumber.foreground": themeColor("--muted"),
+      "editorLineNumber.activeForeground": themeColor("--ink"),
+      "editor.selectionBackground": themeColor("--selection"),
+    },
+  });
+  monaco.editor.setTheme(name);
+  return name;
+}
 
 function language(path: string): string {
   const extension = path.split(".").pop()?.toLowerCase();
@@ -50,7 +59,7 @@ export function CodeEditor({
     const editor = monaco.editor.create(host.current, {
       value: initial.current,
       language: language(path),
-      theme: "tommybrown",
+      theme: applyEditorTheme(),
       automaticLayout: true,
       minimap: { enabled: false },
       fontFamily: "Consolas, monospace",
@@ -64,11 +73,13 @@ export function CodeEditor({
     const subscription = editor.onDidChangeModelContent(() =>
       callbacks.current.change(editor.getValue()),
     );
+    const unsubscribeTheme = subscribeTheme(applyEditorTheme);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () =>
       callbacks.current.save(),
     );
     return () => {
       subscription.dispose();
+      unsubscribeTheme();
       editor.getModel()?.dispose();
       editor.dispose();
     };

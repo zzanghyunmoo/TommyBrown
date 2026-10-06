@@ -2,136 +2,152 @@
 
 ## 0. Research Log
 
-- User reference: Herdr's spaces/agents and top tabs; VS Code-style code workspace.
-  These define the spatial contract, not a pixel-for-pixel clone.
-- Reference shortlist: Linear (dense workspace hierarchy), Notion (document reading),
-  Claude (warm neutrals). Selected minimalist execution with Linear's compact control
-  anatomy, adapted to TommyBrown's warm, light desktop chrome. No upstream assets copied.
-- StyleGallery: [panel-layout](https://github.com/changeroa/StyleGallery/blob/main/patterns/viewport-shell/panel-layout.md)
-  informs primary/support pane containment. Each bounded workspace pane owns its scroll.
-- External screenshot/concept lanes: no screenshots or generated mockups used as fidelity
-  evidence. The supplied application layout and this explicit token contract guide the build.
-- Actual rendered desktop evidence will be recorded in `docs/verification/`.
+- User reference: Orca's compact sidebar, workspace tabs and uninterrupted work surface.
+  Inspected the [official terminal screenshot](https://www.onorca.dev/whats-new/posters/ghostty-style-terminal.jpg)
+  linked from [Orca](https://www.onorca.dev/). This is an original adaptation; no logos,
+  upstream assets or application code are copied.
+- Linear supplies luminance hierarchy and precise controls; minimalist execution keeps
+  native typography, Radix icons and quiet neutral rules. The desktop gets a copper
+  accent that belongs to TommyBrown. No marketing hero or fabricated activity.
+- [StyleGallery panel-layout](https://github.com/changeroa/StyleGallery/blob/main/patterns/viewport-shell/panel-layout.md)
+  informs intrinsic minimums and primary/support containment. Native panes add explicit
+  scroll ownership instead of adopting the example's document scrolling.
+- Existing Herdr-style pane shortcuts, tab retention and native browser splitting remain
+  product behavior. This redesign changes chrome and visual hierarchy.
+- Native screenshots and actual interaction results live in the verification checkpoint.
+  No generated mockup is used as evidence of the implementation.
 
 ## 1. Atmosphere & Identity
 
-A quiet workbench: warm paper, dark ink, brown controls, and compact workspace rails.
-The signature is the small brown TB monogram beside a persistent workspace structure.
-Dense terminals and code retain their own dark surfaces; settings stay readable on paper.
-No decorative charts, fabricated usage statistics, marketing hero, or sample agents.
+Graphite studio in Dark, cool porcelain in Bright. A small copper TB mark anchors the
+rail. One compact header combines selected workspace tabs and the theme choice.
+An inset working surface gives the terminal, editor and browser a clear boundary.
+Settings use the full available width; setup guidance is optional inline disclosure.
 
 ## 2. Color
 
-| Token | Value | Role |
+| Token | Bright | Dark |
 | --- | --- | --- |
-| --canvas | #f7f6f3 | Sidebar and app frame |
-| --paper | #fdfcf9 | Main working surface |
-| --surface | #ffffff | Controls and selected tabs |
-| --wash | #eeece6 | Hover and selected rows |
-| --ink | #292825 | Primary text |
-| --backdrop | #29282566 | Modal backdrop |
-| --muted | #6b6a64 | Secondary text |
-| --line | #e2dfd7 | Structural dividers |
-| --accent | #805035 | Primary action background |
-| --accent-hover | #693e28 | Primary action hover |
-| --on-accent | #ffffff | Action labels |
-| --success | #346538 | Ready status |
-| --success-wash | #edf3ec | Ready background |
-| --warning | #805d1a | Pending status |
-| --warning-wash | #fbf3db | Pending background |
-| --danger | #9f2f2d | Error text |
-| --danger-wash | #fdebec | Error background |
-| --terminal | #20211f | Terminal/editor canvas |
-| --terminal-ink | #e5e4dd | Terminal/editor foreground |
+| --canvas | #f1f2f4 | #17191d |
+| --paper | #f9fafb | #1d2025 |
+| --surface | #ffffff | #252930 |
+| --wash | #e9ebef | #303640 |
+| --ink | #24272e | #edf0f5 |
+| --muted | #626873 | #a7afbd |
+| --line | #dce0e6 | #373e49 |
+| --accent | #775239 | #e4b68d |
+| --accent-hover | #5f402b | #f0c7a1 |
+| --on-accent | #ffffff | #252018 |
+| --accent-wash | #f0e7df | #3a3028 |
+| --success / --success-wash | #286044 / #e6f2eb | #9cdbb4 / #21392d |
+| --warning / --warning-wash | #795610 / #faf0d5 | #e5c783 / #3a3323 |
+| --danger / --danger-wash | #a2333d / #fbe9ec | #ffacb5 / #41282e |
+| --terminal / --terminal-ink | #fcfcfd / #30353f | #14171c / #e0e5ee |
+| --selection | #cbd9ef | #3b506b |
+| --backdrop | #24272e66 | #080b10aa |
+| --rim | #ffffff | #ffffff08 |
+| --shadow | #24272e08 | #080b1033 |
 
-Selection uses a background wash and glyph, not an accent stripe. Status always includes
-text, not color alone. Provider identities are text labels rather than copied logos.
+Terminal ANSI normal colors (black, red, green, yellow, blue, magenta, cyan, white):
+Bright `#30353f #b42338 #247047 #866000 #245eac #87459c #1c6b78 #626873`;
+Dark `#566071 #ef8795 #9cdbb4 #e5c783 #8fbcf2 #cca9eb #8ed0d7 #e0e5ee`.
+Bright variants share these swatches; xterm additionally enforces minimum contrast 4.5.
+Monaco uses paper/ink/wash/muted/selection and its inherited light/dark syntax theme.
+Native window background equals canvas. Remote web pages retain their own styles.
+
+Selection uses a wash and stronger type, never an accent stripe. Status includes text.
+The first launch follows the OS appearance; explicit Bright/Dark choices persist in the
+app profile. Apply before renderer content appears. Theme changes update mounted
+editors and terminals without recreating their models or processes.
 
 ## 3. Typography
 
 Native `Segoe UI, system-ui, sans-serif`; mono `Cascadia Code, Consolas, monospace`.
 No remote fonts. Scale: metadata 12px, UI/body 14px, emphasized body 16px, section 20px,
 page title 28px. Weights 400, 500, 600. Body line-height 1.5, headings 1.2.
+Terminal and Monaco text use 13px Consolas. Numbers use tabular figures where relevant.
 
 ## 4. Spacing & Layout
 
-4px base. Tokens --s1=4px, --s2=8px, --s3=12px, --s4=16px, --s5=20px,
---s6=24px, --s8=32px, --s10=40px, --s12=48px. Sidebar 232px; header 60px;
-tab row 44px; status bar 28px; support pane 288px. Controls at least 36px tall.
-Compact desktop 960px; roomy desktop 1280px. Main settings content maximum 1040px.
+4px base: s1=4, s2=8, s3=12, s4=16, s5=20, s6=24, s8=32, s10=40, s12=48.
+Sidebar 216px; unified header 52px; status bar 24px. Work surface inset 8px,
+outer radius 12px, neutral 1px boundary. Workspace buttons are 36px high and cap
+at 280px with ellipsis for long names. Theme control stays visible with sidebar hidden.
+Settings cap at 1120px, with 24px padding (20px below 1100px), 20px vertical rhythm
+and compact provider rows. The guide is a bottom disclosure.
 
-Root is 100dvh with fixed chrome. Sidebar list, main content, terminal, and right document
-pane have independent bounded scroll jobs. Grid children use min-width/min-height zero.
-Below 1100px, supporting content stacks after primary content. Below 700px, the sidebar
-becomes a top navigation band for small-window inspection; main content never overflows.
+Root is 100dvh. Sidebar, settings content, file tree and each working pane own bounded
+scroll regions. Grid/flex children use min-width/min-height zero. Native minimum is
+960x640; the sidebar can be hidden. The component showcase also exercises 768/375px.
 
-The tabbed workbench replaces that support-pane stacking rule: one full-width working
-area with Terminal, Code/Documents, and Connectors tabs. Browser/app launch actions
-open a right support split (working area 60%, support 40%); browser and app are peer
-tabs there, with one native surface visible at a time. Closing support restores width.
-Tab strips stay fixed, scroll horizontally when needed, and support arrow/Home/End
-navigation. Inactive content stays mounted to retain PTYs, drafts and web state.
-A bounded split tree places stable pane elements without remounting their contents.
-Explicit terminal splits remain available. Each leaf owns its scroll; the canvas,
-pane title, toolbar, and splitter stay fixed. Splitter hit area is 8px with a neutral
-1px center rule. Splits clamp to 20-80%; pane creation also respects a usable minimum
-of 240px by 160px. At the native 960px minimum window, the sidebar can be hidden.
-Zoom temporarily fills the canvas without deleting other panes or stopping sessions.
-When a pane body is at most 240px tall, its controls use a 28px compact height,
-hide redundant visual field labels (accessible names remain), and reduce tab padding.
-Browser controls stay on one row with bounded horizontal overflow at extreme widths.
-Terminal fitting clamps its grid to the IPC contract even during a tiny resize.
+The main workbench has Terminal, Code/Documents and Connectors tabs. Browser/app
+launch opens a right support split (60% working, 40% support). Browser and app are
+peer tabs with one native surface visible at a time. Closing support restores width.
+Inactive content remains mounted to retain PTYs, drafts and web state. Position changes
+invalidate native bounds; hidden DOM alone is insufficient for native child views.
+
+A stable split tree supports extra terminals, zoom, swap and resize. Each leaf owns
+scrolling; toolbars stay fixed. Splitter hit area is 8px with a neutral center rule,
+limits 20-80%, minimum leaf 240x160. At pane heights <=240px controls compact to 28px,
+redundant visual labels hide while accessible names stay, and tab padding decreases.
+Browser controls use bounded horizontal overflow at extreme widths. PTY geometry
+always clamps to the IPC contract.
 
 ## 5. Components
 
-- **Button**: primary/secondary/quiet; optional icon; disabled/busy/hover/pressed/focus.
-  Native button with visible text or aria-label. 36px minimum height, 6px radius.
-- **Status**: neutral/success/pending/error, text with a small dot. Live status uses a polite
-  status region; no rapidly repeating announcements.
-- **Panel**: section title, optional description/action, body. 8px radius and neutral border.
-  Empty, loading, populated, and error states retain the panel's purpose and recovery action.
-- **Field**: associated visible label plus input/select, description or inline error.
-- **Nav row**: icon, text, optional count; selected wash, keyboard focus; long names truncate
-  with a title; 36px height. Navigation is separate from status.
-- **Provider row**: provider name, supported account type, real connection state, login action.
-  Pending login has cancel/reopen actions and a deadline. Never claim connected on callback alone.
-- **Tab**: role tab, selected background, label and close button with independent accessible
-  name. Arrow keys move between peers. Dirty documents have an explicit unsaved indicator.
-- **Notice**: inline failure or explanatory message; wrapping text and a recovery action.
-- **Workbench pane**: compact 36px tab row, selected wash, zoom/close actions,
-  and a bounded body. The primary working pane retains its document editor when
-  a split closes. Browser and application pages retain independent navigation state.
-- **Splitter**: pointer drag with capture, keyboard arrows in 5% steps, Home/End limits,
-  and a labelled separator with current size. Continuous resize follows input without motion.
-- **Shortcut help**: searchable key/action rows in a keyboard-dismissable dialog. Native
-  web views hide while the dialog is open and return when it closes; focus returns to the pane.
+- **Button**: primary/secondary/quiet; icon, text, disabled/busy/hover/pressed/focus.
+  36px minimum, 6px radius. Toolbar compact variants follow the pane contract.
+- **Theme choice**: native select labelled 화면 테마, visible Bright/Dark labels,
+  disabled while saving. Retain keyboard focus after save; errors remain visible until
+  a successful retry. Persistence errors do not claim that the requested theme was saved.
+- **Workspace navigation**: semantic navigation with aria-current, selected surface
+  and neutral border. Stronger selected text, long names with titles and ellipsis.
+- **Nav row**: icon, name, optional real count/status; selected surface, 36px height.
+  Session state comes from live PTYs, never fabricated metrics.
+- **Status**: neutral/success/pending/error, text and small dot. Live state uses polite
+  announcements; repeated polling does not repeatedly announce unchanged data.
+- **Panel**: title, optional description/action, body, 8px radius, neutral border.
+  Empty/loading/error states retain the panel's purpose and recovery action.
+- **Field**: associated label, native input/select, description or inline error.
+- **Provider row**: provider, account type, actual connection state and login action.
+  Pending login has cancel/reopen and a deadline; callbacks alone do not prove success.
+- **Tab**: role tab, selected background and label; independently labelled close button.
+  Arrow/Home/End navigation within pane groups. Dirty documents show an unsaved marker.
+- **Notice**: wrapping inline information/failure with a recovery action when applicable.
+- **Guide disclosure**: native details/summary keeps setup help available on demand.
+- **Workbench pane**: 36px tabs, focused wash, zoom/close controls, bounded body.
+  Closing a split preserves the primary document host and its unsaved changes.
+- **Splitter**: pointer capture, keyboard arrows in 5% steps, Home/End bounds, labelled
+  separator with size. Follow the pointer without animating geometry.
+- **Shortcut help**: searchable rows, keyboard dismiss, focus return. Hide native views
+  while the dialog owns input.
 
-A development component showcase exercises shared states before composing product screens.
+The development showcase exercises shared states in both themes before final desktop QA.
 
 ## 6. Motion & Interaction
 
-100ms opacity/transform feedback only. Buttons visibly react on press; disabled state retains
-legibility. Asynchronous actions show a busy label immediately. No layout animation under
-the pointer. Reduced motion removes positional motion. Errors remain visible until retry
-or dismissal; confirmation comes from changed data rather than arbitrary success toasts.
+100ms opacity/transform feedback only. No animated theme crossfade or layout animation.
+Reduced motion removes button transitions and press movement. Busy labels respond
+immediately; failures remain until retry or dismissal. Native controls retain OS behavior.
 
-Herdr's Ctrl+B prefix governs workbench commands across local and remote content.
-Prefix/resize mode is shown as text in the workbench bar. Escape cancels. Splitter
-gestures and focus movement are immediate; reduced motion requires no alternate layout.
-This is a desktop-specific keyboard/splitter mechanism, not a decorative animation.
+Ctrl+B prefixes workbench commands across local and remote content. Show prefix/resize
+mode as text, Escape cancels, and focus/splitter movement is immediate. Theme changes do
+not interrupt editor undo history, terminal input or browser navigation.
 
 ## 7. Depth & Surface
 
-Borders-only with paper/canvas differentiation. No decorative shadows or gradients.
-Radius 4px small metadata, 6px controls, 8px panels; structural panes have square edges.
-One-pixel neutral rules establish containment. Terminal/code contrasts are intentional.
+The outer surface uses `0 1px 4px var(--shadow)` plus a 1px inset rim. Depth comes
+chiefly from four neutral surface tones. Selected workspace tabs use surface and a
+neutral border. No decorative gradients, heavy shadows or animated layout.
+Radii: metadata 4px, controls 6px, panels 8px, outer work surface 12px.
 
-## 8. Accessibility Constraints & Accepted Debt
+## 8. Accessibility & Validation
 
-Target WCAG 2.2 AA: normal text contrast at least 4.5:1, all controls keyboard reachable,
-visible 2px focus-visible ring, semantic headings, labels, reduced motion, and readable zoom.
-Long account labels and URLs wrap or truncate intentionally. Loading and auth failure
-cannot remove cancel/back navigation. Native window controls retain OS behavior.
+Target normal text contrast >=4.5:1, visible 2px focus rings, semantic headings, labelled
+controls, reduced motion and readable Korean labels. Disabled controls remain legible.
+Long URLs/account labels wrap or intentionally truncate. Auth failures preserve cancel
+and back navigation. Theme controls remain reachable when the sidebar is hidden.
 
-No accessibility debt has been accepted. Desktop authentication, keyboard flow, clipping,
-and component states require observed QA before completion; untested behavior stays open.
+Actual native screenshots and keyboard interactions, not a DOM-only screenshot, prove
+the desktop composition. No screen-reader study or mobile Lighthouse/SEO pass is
+implied by the desktop checks. Unverified behavior must be stated in the checkpoint.

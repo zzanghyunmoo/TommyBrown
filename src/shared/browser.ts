@@ -8,7 +8,22 @@ export const browserGroupSchema = z
 
 export function browserUrl(value: unknown): string {
   const input = z.string().trim().min(1).max(8192).parse(value);
-  const url = new URL(input);
+  const explicitWebScheme = /^https?:\/\//i.test(input);
+  const hostPort = /^(?:localhost|[^:/?#]+\.[^:/?#]+):\d+(?:[/?#]|$)/i;
+  if (
+    /[\\\r\n\t]/.test(input) ||
+    (!explicitWebScheme &&
+      /^[a-z][a-z\d+.-]*:/i.test(input) &&
+      !hostPort.test(input))
+  )
+    throw new Error("Use an HTTP or HTTPS address.");
+  const url = new URL(
+    explicitWebScheme
+      ? input
+      : input.startsWith("//")
+        ? `https:${input}`
+        : `https://${input}`,
+  );
   if (
     !["https:", "http:"].includes(url.protocol) ||
     url.username ||

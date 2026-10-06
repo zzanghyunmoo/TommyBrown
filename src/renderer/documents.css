@@ -5,15 +5,11 @@
 .workspace-page[hidden] {
   display: none;
 }
-button.workspace-tab,
 button.space-row {
   border: 0;
   color: inherit;
   cursor: pointer;
   text-align: left;
-}
-button.workspace-tab {
-  border-right: 1px solid var(--line);
 }
 .space-row {
   width: 100%;
@@ -120,7 +116,7 @@ button.workspace-tab {
 .document-tab [aria-selected="true"] {
   background: var(--paper);
   color: var(--ink);
-  box-shadow: inset 0 2px var(--accent);
+  font-weight: 600;
 }
 .editor-toolbar {
   display: flex;

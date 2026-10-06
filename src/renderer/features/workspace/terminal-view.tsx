@@ -1,10 +1,37 @@
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
-import { Terminal } from "@xterm/xterm";
+import { type ITheme, Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { TerminalEvent, TerminalInfo } from "../../../shared/terminal";
 import { Notice } from "../../components/primitives";
+import { subscribeTheme, themeColor } from "../../theme";
+
+function terminalTheme(): ITheme {
+  return {
+    background: themeColor("--terminal"),
+    foreground: themeColor("--terminal-ink"),
+    cursor: themeColor("--terminal-ink"),
+    cursorAccent: themeColor("--terminal"),
+    selectionBackground: themeColor("--selection"),
+    black: themeColor("--ansi-black"),
+    red: themeColor("--ansi-red"),
+    green: themeColor("--ansi-green"),
+    yellow: themeColor("--ansi-yellow"),
+    blue: themeColor("--ansi-blue"),
+    magenta: themeColor("--ansi-magenta"),
+    cyan: themeColor("--ansi-cyan"),
+    white: themeColor("--ansi-white"),
+    brightBlack: themeColor("--ansi-black"),
+    brightRed: themeColor("--ansi-red"),
+    brightGreen: themeColor("--ansi-green"),
+    brightYellow: themeColor("--ansi-yellow"),
+    brightBlue: themeColor("--ansi-blue"),
+    brightMagenta: themeColor("--ansi-magenta"),
+    brightCyan: themeColor("--ansi-cyan"),
+    brightWhite: themeColor("--ansi-white"),
+  };
+}
 
 export function TerminalView({
   session,
@@ -27,17 +54,16 @@ export function TerminalView({
       fontFamily: "Consolas, monospace",
       scrollback: 5000,
       allowProposedApi: false,
-      theme: {
-        background: "#202321",
-        foreground: "#e6e6dc",
-        cursor: "#e6e6dc",
-        selectionBackground: "#656858",
-      },
+      minimumContrastRatio: 4.5,
+      theme: terminalTheme(),
     });
     const fit = new FitAddon();
     terminal.loadAddon(fit);
     terminal.loadAddon(new WebLinksAddon((_event, url) => link.current(url)));
     terminal.open(host.current);
+    const unsubscribeTheme = subscribeTheme(() => {
+      terminal.options.theme = terminalTheme();
+    });
     let active = true;
     let initialized = false;
     let sequence = 0;
@@ -97,6 +123,7 @@ export function TerminalView({
     return () => {
       active = false;
       observer.disconnect();
+      unsubscribeTheme();
       unsubscribe();
       input.dispose();
       resize.dispose();

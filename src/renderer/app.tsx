@@ -7,6 +7,7 @@ import {
 } from "@radix-ui/react-icons";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Button, Notice } from "./components/primitives";
+import { ThemeChoice } from "./components/theme-choice";
 import { ModelAccess } from "./features/models/model-access";
 import { useSpaces } from "./features/workspace/use-spaces";
 import { useTerminals } from "./features/workspace/use-terminals";
@@ -28,6 +29,7 @@ export function App() {
     () => readViewState().page,
   );
   const [settingsError, setSettingsError] = useState<string>();
+  const [appearanceError, setAppearanceError] = useState<string>();
   useEffect(() => {
     try {
       saveViewState({ sidebarHidden });
@@ -77,6 +79,11 @@ export function App() {
                   setPage("workspace");
                 }}
                 title={space.root}
+                aria-current={
+                  screen === "workspace" && spaces.selected?.id === space.id
+                    ? "page"
+                    : undefined
+                }
               >
                 <CubeIcon />
                 <span>{space.name}</span>
@@ -158,36 +165,35 @@ export function App() {
           >
             <HamburgerMenuIcon />
           </Button>
-          <span>{screen === "models" ? "설정" : "작업 공간"}</span>
-          <span className="header-separator">/</span>
-          <strong>
-            {screen === "models" ? "모델 연결" : spaces.selected?.name}
-          </strong>
-          <span className="local-label">TommyBrown · desktop</span>
-        </header>
-        <div className="workspace-tabs">
-          <button
-            type="button"
-            className="workspace-tab"
-            onClick={() => setPage("models")}
-          >
-            <GearIcon />
-            모델 연결
-          </button>
-          {spaces.selected && (
+          <nav className="workspace-tabs" aria-label="열린 화면">
             <button
               type="button"
               className="workspace-tab"
-              onClick={() => setPage("workspace")}
+              aria-current={screen === "models" ? "page" : undefined}
+              onClick={() => setPage("models")}
             >
-              <CubeIcon />
-              {spaces.selected.name}
+              <GearIcon />
+              <span>모델 연결</span>
             </button>
-          )}
-        </div>
+            {spaces.selected && (
+              <button
+                type="button"
+                className="workspace-tab"
+                aria-current={screen === "workspace" ? "page" : undefined}
+                title={spaces.selected.name}
+                onClick={() => setPage("workspace")}
+              >
+                <CubeIcon />
+                <span>{spaces.selected.name}</span>
+              </button>
+            )}
+          </nav>
+          <ThemeChoice report={setAppearanceError} />
+        </header>
         <div className="workspace-content">
           {spaces.error && <Notice error>{spaces.error}</Notice>}
           {settingsError && <Notice error>{settingsError}</Notice>}
+          {appearanceError && <Notice error>{appearanceError}</Notice>}
           <div className="workspace-page" hidden={screen !== "models"}>
             <ModelAccess />
           </div>
@@ -220,7 +226,14 @@ export function App() {
         </div>
         <footer className="statusbar">
           <span>TommyBrown 0.1.0</span>
-          <span>계정 연결 및 모델 공유</span>
+          <span>
+            {
+              terminals.sessions.filter(
+                (session) => session.phase === "running",
+              ).length
+            }
+            개 세션 실행 중
+          </span>
         </footer>
       </div>
     </div>

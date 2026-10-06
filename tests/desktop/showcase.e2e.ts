@@ -32,22 +32,28 @@ test("native component showcase preserves keyboard access and bounded layout", a
       page.getByRole("button", { name: "사용 불가" }),
     ).toBeDisabled();
     await expect(page.getByRole("alert")).toContainText("연결할 수 없습니다");
-    for (const width of [1320, 768, 375]) {
-      await desktop.evaluate(({ BrowserWindow }, nextWidth) => {
-        const window = BrowserWindow.getAllWindows()[0];
-        if (!window) throw new Error("No native window");
-        window.setMinimumSize(360, 400);
-        window.setSize(nextWidth, 880);
-      }, width);
-      await page.screenshot({
-        path: `test-results/showcase-${width}.png`,
-        fullPage: true,
-      });
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= window.innerWidth,
-        ),
-      ).toBe(true);
+    for (const theme of ["light", "dark"]) {
+      await page
+        .getByRole("combobox", { name: "화면 테마" })
+        .selectOption(theme);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      for (const width of [1320, 768, 375]) {
+        await desktop.evaluate(({ BrowserWindow }, nextWidth) => {
+          const window = BrowserWindow.getAllWindows()[0];
+          if (!window) throw new Error("No native window");
+          window.setMinimumSize(360, 400);
+          window.setSize(nextWidth, 880);
+        }, width);
+        await page.screenshot({
+          path: `test-results/showcase-${theme}-${width}.png`,
+          fullPage: true,
+        });
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+        ).toBe(true);
+      }
     }
     const secrets = await readFile(
       resolve(directory, "gateway-keys.encrypted"),
