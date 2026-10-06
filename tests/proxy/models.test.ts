@@ -203,6 +203,7 @@ describe("mapped model launches", () => {
           id: modelAlias(provider, `${provider}-model`),
           owned_by: "same-author",
         },
+        { id: `tb-agy-${provider}-antigravity-model`, owned_by: "same-author" },
       ];
     });
   });
@@ -234,7 +235,16 @@ describe("mapped model launches", () => {
           cli,
           model: `${cli}-model`,
         });
-        expect(profile.args).toContain(modelAlias(target, `${target}-model`));
+        if (cli === "antigravity") {
+          expect(profile.args).toEqual([
+            "--model",
+            `tb-agy-${target}-antigravity-model`,
+          ]);
+          expect(profile.environment["AGY_LLM_GATEWAY_MODELS"]).toBe(
+            `tb-agy-${target}-antigravity-model`,
+          );
+        } else
+          expect(profile.args).toContain(modelAlias(target, `${target}-model`));
         if (cli === "claude") {
           expect(profile.environment["ANTHROPIC_DEFAULT_OPUS_MODEL"]).toBe(
             modelAlias(target, `${target}-model`),
@@ -338,6 +348,49 @@ describe("mapped model launches", () => {
       ).toBe(modelAlias("codex", `gpt-${shortcut}`));
     expect(profile.args).toEqual(["--model", "fable"]);
     expect(profile.environment["ANTHROPIC_MODEL"]).toBe("fable");
+  });
+  it("registers readable Antigravity choices and puts the selected model first", async () => {
+    const { service, settings } = await fixture();
+    settings.routes.antigravity = "codex";
+    settings.rows = ["argon", "pro", "flash", "flash-lite"].map((family) => ({
+      id: randomUUID(),
+      name: family,
+      claudeShortcut: null,
+      models: {
+        codex: `gpt-${family}`,
+        claude: null,
+        antigravity: `gemini-${family}`,
+      },
+    }));
+    mocks.accounts.mockResolvedValue([
+      { name: "codex.json", provider: "codex", disabled: false },
+    ]);
+    mocks.accountModels.mockResolvedValue(
+      settings.rows.flatMap((row) => [
+        { id: row.models.codex },
+        { id: modelAlias("codex", row.models.codex ?? "") },
+        { id: `tb-agy-codex-${row.models.antigravity}` },
+      ]),
+    );
+    await service.saveMappings(settings);
+    const profile = await service.launchProfile({
+      cli: "antigravity",
+      model: "gemini-pro",
+    });
+    expect(profile.args).toEqual(["--model", "tb-agy-codex-gemini-pro"]);
+    expect(profile.environment["AGY_LLM_GATEWAY_MODELS"]?.split(",")).toEqual([
+      "tb-agy-codex-gemini-pro",
+      "tb-agy-codex-gemini-argon",
+      "tb-agy-codex-gemini-flash",
+      "tb-agy-codex-gemini-flash-lite",
+    ]);
+    expect(mocks.setModelAliases).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        codex: expect.arrayContaining([
+          { name: "gpt-pro", alias: "tb-agy-codex-gemini-pro", fork: true },
+        ]),
+      }),
+    );
   });
   it("rejects a configured Claude shortcut with a missing target", async () => {
     const { service, settings } = await fixture();

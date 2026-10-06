@@ -47,17 +47,18 @@ fills four editable task groups and shows their names in model selectors:
 
 | Purpose | OpenAI | Claude | Gemini |
 | --- | --- | --- | --- |
-| Deep reasoning | Astra | Fable | Pro High |
-| Complex coding | Terra | Opus | Pro / low or medium variant |
-| General coding | Sol | Sonnet | Flash |
+| Deep reasoning | Astra | Fable | Gemini 4 Argon |
+| Complex coding | Sol | Opus | Pro |
+| General coding | Terra | Sonnet | Flash |
 | Fast tasks | Luna | Haiku | Flash-Lite |
 
 These are purpose preferences, not equivalent benchmark scores. Existing choices and
 routes are preserved. Registered account IDs are preferred; absent families use
 explicit request aliases, marked as unavailable for execution on that provider.
 Replace an execution target with an ID available from its connected account. Pro effort
-variants must be distinct registered IDs; a family alias alone does not set reasoning
-effort. Flash-Lite is not currently listed among [Antigravity models](https://antigravity.google/docs/models).
+variants belong to the same purpose group; a family alias does not set reasoning effort.
+Argon and Flash-Lite are not currently listed among [Antigravity models](https://antigravity.google/docs/models).
+`gemini-4-argon` is a request alias here, not a claim that the account has Google Argon access.
 
 Claude's Fable, Opus, Sonnet, and Haiku shortcuts can be assigned to rows; unassigned
 shortcuts use the selected session model. Settings persist after restart. Reopen
@@ -65,6 +66,11 @@ CLI sessions after changing mappings, and refresh the model selector if its prev
 is outdated. See the [mapping guide](docs/solutions/architecture-patterns/provider-model-mapping.md).
 Selecting `fable` preserves that Claude shortcut while its configured execution
 provider receives the corresponding mapped model.
+
+Antigravity's `/model` menu receives all mapped models for its execution provider.
+Readable provider-scoped names such as `tb-agy-codex-gemini-4-argon` keep the selected
+account unambiguous. The launch model is pinned explicitly because Antigravity restores
+its previous selection; changing the menu affects that CLI session.
 
 The gateway uses loopback port 8317. An occupied port produces an error; TommyBrown
 does not stop other applications. Closing TommyBrown stops its own gateway.

@@ -12,15 +12,15 @@ describe("purpose model presets", () => {
   it("creates four explicit request aliases without inventing account availability", () => {
     const settings = addPurposeMappings(emptyMappings(), emptyCatalog);
     expect(settings.rows.map((row) => row.models)).toEqual([
-      { codex: "astra", claude: "fable", antigravity: "gemini-pro-high" },
-      { codex: "terra", claude: "opus", antigravity: "gemini-pro" },
-      { codex: "sol", claude: "sonnet", antigravity: "gemini-flash" },
+      { codex: "astra", claude: "fable", antigravity: "gemini-4-argon" },
+      { codex: "sol", claude: "opus", antigravity: "gemini-pro" },
+      { codex: "terra", claude: "sonnet", antigravity: "gemini-flash" },
       { codex: "luna", claude: "haiku", antigravity: "gemini-flash-lite" },
     ]);
     expect(settings.routes).toEqual(emptyMappings().routes);
     expect(modelMappingsSchema.safeParse(settings).success).toBe(true);
   });
-  it("chooses registered models within each family and keeps Pro effort variants separate", () => {
+  it("chooses registered families and groups Pro effort variants in the same tier", () => {
     const settings = addPurposeMappings(emptyMappings(), {
       codex: [
         "gpt-6-astra",
@@ -37,6 +37,7 @@ describe("purpose model presets", () => {
         "claude-haiku-4-5",
       ],
       antigravity: [
+        "gemini-4-argon-preview",
         "gemini-3.1-pro-high",
         "gemini-3.1-pro-low",
         "gemini-3.8-flash-medium",
@@ -45,12 +46,12 @@ describe("purpose model presets", () => {
     });
     expect(settings.rows.map((row) => row.models.codex)).toEqual([
       "gpt-6-astra",
-      "gpt-5.6-terra",
       "gpt-6.1-sol",
+      "gpt-5.6-terra",
       "gpt-6-luna",
     ]);
     expect(settings.rows.map((row) => row.models.antigravity)).toEqual([
-      "gemini-3.1-pro-high",
+      "gemini-4-argon-preview",
       "gemini-3.1-pro-low",
       "gemini-3.8-flash-medium",
       "gemini-3.5-flash-lite",
@@ -70,7 +71,7 @@ describe("purpose model presets", () => {
     const settings = addPurposeMappings(saved, emptyCatalog);
     expect(settings.rows[0]).toEqual({
       ...row,
-      models: { ...row.models, antigravity: "gemini-pro-high" },
+      models: { ...row.models, antigravity: "gemini-4-argon" },
     });
     expect(settings.rows).toHaveLength(4);
     expect(settings.routes).toEqual(saved.routes);
@@ -112,7 +113,7 @@ describe("purpose model presets", () => {
     first.models.antigravity = null;
     const result = addPurposeMappings(saved, emptyCatalog);
     expect(result.rows).toHaveLength(4);
-    expect(result.rows[0]?.models.antigravity).toBe("gemini-pro-high");
+    expect(result.rows[0]?.models.antigravity).toBe("gemini-4-argon");
     expect(modelMappingsSchema.safeParse(result).success).toBe(true);
   });
 });

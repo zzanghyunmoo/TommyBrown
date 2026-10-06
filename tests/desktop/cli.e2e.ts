@@ -4,7 +4,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
 import { z } from "zod";
-import { modelAlias } from "../../src/main/proxy/model-mappings";
+import {
+  antigravityAlias,
+  modelAlias,
+} from "../../src/main/proxy/model-mappings";
 import {
   emptyMappings,
   providerLabels,
@@ -128,11 +131,14 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
             agyModel: z.string().nullable(),
           })
           .parse(JSON.parse(await readFile(capture, "utf8")));
-        expect(record.args).toContain(modelAlias(target, models[target]));
+        if (cli !== "antigravity")
+          expect(record.args).toContain(modelAlias(target, models[target]));
         if (cli === "claude")
           expect(record.opus).toBe(modelAlias(target, models[target]));
         if (cli === "antigravity")
-          expect(record.agyModel).toBe(modelAlias(target, models[target]));
+          expect(record.agyModel).toBe(
+            antigravityAlias(target, models.antigravity),
+          );
         await page
           .getByRole("button", { name: `${cli} 1 종료`, exact: true })
           .click();

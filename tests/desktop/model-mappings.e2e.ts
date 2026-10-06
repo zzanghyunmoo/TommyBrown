@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
-import { modelAlias } from "../../src/main/proxy/model-mappings";
+import {
+  antigravityAlias,
+  modelAlias,
+} from "../../src/main/proxy/model-mappings";
 import {
   cliLabels,
   providerLabels,
@@ -85,7 +88,11 @@ test("edit, validate, route all six directions, and restore model mappings", asy
         const command = await desktop.evaluate(({ clipboard }) =>
           clipboard.readText(),
         );
-        expect(command).toContain(modelAlias(target, models[target]));
+        expect(command).toContain(
+          cli === "antigravity"
+            ? antigravityAlias(target, models.antigravity)
+            : modelAlias(target, models[target]),
+        );
         if (cli === "claude")
           expect(command).toContain("ANTHROPIC_DEFAULT_OPUS_MODEL");
       }

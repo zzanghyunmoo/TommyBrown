@@ -35,7 +35,7 @@ is retained here rather than represented as a first-attempt pass.
 The existing Monaco lazy chunk size warning remains. This is a native desktop
 verification; no mobile, screen-reader study, or Lighthouse score is claimed.
 
-## Actual account application
+## Initial account application (superseded below)
 
 Applied the presets through the application UI to the existing local profile, with
 a local backup of previous mappings and selections. Retained execution through the
@@ -49,7 +49,7 @@ connected OpenAI account and verified every target against its account model cat
 | Fast tasks | haiku | gemini-flash-lite | gpt-6-luna |
 
 After reopening, the gateway started automatically and all four rows persisted.
-Real installed Claude Code and Antigravity produced successful responses through
+Real installed Claude Code and Antigravity produced successful headless responses through
 the connected OpenAI account from an in-app PowerShell session. Claude's explicit
 Sonnet selection exercised the general-coding route; Antigravity used the saved
 deep-reasoning route. No Google account login or global CLI configuration change.
@@ -76,3 +76,37 @@ horizontal scroll and reachable save action. Purpose labels appear in both CLI m
 selectors; custom mapping names remain intact. Existing native workbench and theme
 tests verify terminal/browser persistence and keyboard focus across sibling surfaces.
 Captures and local profile data remain ignored; they are not public repository assets.
+
+## Follow-up: Argon tier and interactive Antigravity
+
+The user corrected the purpose families to Astra/Fable/Argon, Sol/Opus/Pro,
+Terra/Sonnet/Flash and Luna/Haiku/Flash-Lite. The existing local rows now use
+`gpt-6-astra`, `gpt-6.1-sol`, `gpt-5.6-terra` and `gpt-6-luna`, respectively.
+Row IDs and execution providers were retained, with a local settings backup.
+Argon is an app request alias; Google Argon access and benchmark equivalence are
+not claimed.
+
+The old launch exposed only one opaque model to Antigravity. Registered all mapped
+choices as readable provider-scoped aliases and supplied them to `/model`.
+AGY 1.2.17 logs an early model-resolution error before gateway authentication;
+the interactive fixture established that authentication then reapplies the model
+and inference succeeds. Removing `--model` is unsafe: actual-profile testing
+reproduced restoration of Pro despite selecting Argon in the app. Explicit selection
+is retained. The upstream startup diagnostic remains, without a Google login prompt.
+
+Final package: `release/windows-20261006044702106/TommyBrown-win32-x64/TommyBrown.exe`.
+
+- Typecheck and lint: PASS (138 files).
+- `TOMMYBROWN_NATIVE_AGY=1 bun run test`: PASS, 93 tests in 22 files, including
+  actual interactive AGY startup and model switching against a local HTTP fixture.
+- Final package desktop checks: PASS, 3 affected tests covering all six routes,
+  CLI arguments/environment, mapping edits, gateway and selection restoration.
+- Real account in the packaged app: Argon/Astra response, four-choice `/model` menu,
+  Pro/Sol selection and response: PASS.
+- In-app PowerShell `antigravity`: restored gateway and all model choices: PASS.
+- Inspected `.local/argon-model-picker.png` and `.local/argon-pro-response.png`:
+  selected source, OpenAI target, readable model choices, colors and both replies.
+
+The first live assertion examined raw PTY bytes and failed because ANSI cursor
+updates split the response text. The final run asserts the rendered xterm rows.
+This is a verification correction; the raw-byte failure is not hidden as a pass.
