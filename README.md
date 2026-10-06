@@ -11,14 +11,15 @@ Download the matching archive from [GitHub Releases](https://github.com/zzanghyu
 
 | Computer | Archive |
 | --- | --- |
-| Windows x64 | `TommyBrown-0.1.1-windows-x64.zip` |
-| Mac with Apple Silicon | `TommyBrown-0.1.1-macos-arm64.zip` |
-| Mac with Intel | `TommyBrown-0.1.1-macos-x64.zip` |
+| Windows x64 | `TommyBrown-0.1.2-windows-x64.zip` |
+| Mac with Apple Silicon | `TommyBrown-0.1.2-macos-arm64.zip` |
+| Mac with Intel | `TommyBrown-0.1.2-macos-x64.zip` |
 
 On Windows, extract the entire ZIP and run `TommyBrown.exe`, keeping the other
 files beside it. On macOS, extract and drag `TommyBrown.app` to Applications.
-The app includes Electron and the Memory server. Install coding CLIs separately;
-the managed model proxy downloads from settings on first use.
+The app includes Electron and the Memory server. Install missing coding CLIs in
+**설정 > 일반·색상 > 코딩 에이전트** or the terminal panel. The managed model proxy
+downloads from settings on first use.
 
 These builds have no publisher certificate or Apple notarization. Windows may
 show SmartScreen; macOS may require **System Settings > Privacy & Security >
@@ -56,7 +57,7 @@ In Model access, install the engine, start the gateway, and connect an account i
 your browser. On subsequent app launches, the installed gateway starts automatically
 with the saved accounts and mappings. Open a workspace, choose Claude Code, Codex, or
 Antigravity and a discovered model, then start a terminal session. CLI and model choices
-are saved separately for each CLI. Source builds include CLI installation in
+are saved separately for each CLI. Install missing CLIs in
 **설정 > 일반·색상 > 코딩 에이전트**. A missing CLI also offers an install button in
 the terminal panel. Existing native and standard npm installations remain usable;
 npm installations need Node.js on PATH. Custom shell wrappers are not supported.
@@ -141,7 +142,7 @@ progress and bounded logs, supports cancellation and retry, and verifies the ins
 command with `--version`. Open a new terminal session afterward; restarting the app is
 unnecessary. Existing sessions keep their original environment. **설치 다시 확인**
 rescans externally installed CLIs. Installation does not connect accounts or change
-saved model mappings. The published 0.1.1 download predates this installation UI.
+saved model mappings. In-app installation is available from version 0.1.2.
 
 ## Workspace, web apps and service connectors
 
