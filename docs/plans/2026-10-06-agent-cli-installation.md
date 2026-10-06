@@ -47,7 +47,7 @@ Updating, uninstalling, and installing automatically at startup are out of scope
 - `tests/desktop/agent-installation.e2e.ts`: Electron UI missing -> progress ->
   installed, error/retry and view transitions with controlled IPC fixtures; reject
   invalid install input through the actual main bridge.
-- `tests/desktop/agent-installation-live.e2e.ts`: opt-in fresh native CI homes,
+- `tests/desktop/agent-installation-live.e2e.ts`: opt-in disposable native CI accounts,
   official installers for all three CLIs, version verification, immediate real
   terminal launch, and restart discovery on Windows x64/macOS ARM64/macOS x64.
 - Typecheck, Biome, unit suite, build, desktop UI and native screenshots. Record

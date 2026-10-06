@@ -5,16 +5,15 @@ import { _electron as electron, expect, test } from "@playwright/test";
 import { agentNames } from "../../src/shared/agents";
 import { desktopCommand, desktopWindow, nativeCapture } from "./launch";
 
-test("official installers work in a fresh native home and remain discoverable after restart", async () => {
+test("official installers work on a disposable native runner and remain discoverable after restart", async () => {
   test.skip(
-    process.env["TOMMYBROWN_LIVE_AGENT_INSTALL"] !== "1",
-    "Opt-in disposable native CI home only",
+    process.env["TOMMYBROWN_LIVE_AGENT_INSTALL"] !== "1" ||
+      process.env["GITHUB_ACTIONS"] !== "true",
+    "Opt-in disposable GitHub-hosted runner only",
   );
   test.setTimeout(25 * 60_000);
   const directory = resolve(".local", `agent-live-${randomUUID()}`);
-  const home = resolve(directory, "home");
-  const local = resolve(home, "AppData", "Local");
-  await mkdir(local, { recursive: true });
+  await mkdir(directory, { recursive: true });
   const env = Object.fromEntries(
     Object.entries(process.env).filter(
       ([key]) =>
@@ -26,9 +25,6 @@ test("official installers work in a fresh native home and remain discoverable af
     ...desktopCommand(),
     env: {
       ...env,
-      HOME: home,
-      USERPROFILE: home,
-      LOCALAPPDATA: local,
       TOMMYBROWN_TEST: "1",
       TOMMYBROWN_DATA_DIR: resolve(directory, "data"),
     },
