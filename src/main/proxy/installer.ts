@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { gunzipSync } from "node:zlib";
 import { unzipSync } from "fflate";
 import ky from "ky";
+import { Parser } from "tar";
 import { z } from "zod";
 import { GatewayError } from "../../shared/proxy";
 
@@ -20,20 +22,30 @@ const releases = {
   },
 } as const;
 
-export function releaseFor(architecture: string) {
+const darwinChecksums = {
+  x64: "2d5af1cf19cc0d887b96fde809f78a999438a65564ce19de5966b7d5b6c451ca",
+  arm64: "e2080f54ee4d7940c77345440956ce592eef34da2910bd865d4928b75accd122",
+} as const;
+
+export function releaseFor(
+  architecture: string,
+  platform: string = process.platform,
+) {
+  if (platform !== "win32" && platform !== "darwin")
+    throw new GatewayError("download", "Unsupported desktop platform.");
   if (architecture !== "x64" && architecture !== "arm64")
-    throw new GatewayError("download", "Unsupported Windows architecture.");
+    throw new GatewayError("download", "Unsupported desktop architecture.");
   const release = releases[architecture];
+  const target = platform === "win32" ? "windows" : "darwin";
+  const extension = platform === "win32" ? "zip" : "tar.gz";
   return {
-    url: `https://github.com/router-for-me/CLIProxyAPI/releases/download/v${PROXY_VERSION}/CLIProxyAPI_${PROXY_VERSION}_windows_${release.arch}.zip`,
-    sha256: release.sha256,
+    url: `https://github.com/router-for-me/CLIProxyAPI/releases/download/v${PROXY_VERSION}/CLIProxyAPI_${PROXY_VERSION}_${target}_${release.arch}.${extension}`,
+    sha256:
+      platform === "win32" ? release.sha256 : darwinChecksums[architecture],
   };
 }
 
-export function extractVerifiedExecutable(
-  archive: Uint8Array,
-  sha256: string,
-): Uint8Array {
+function verifyArchive(archive: Uint8Array, sha256: string): void {
   if (
     archive.byteLength > MAX_ARCHIVE_BYTES ||
     createHash("sha256").update(archive).digest("hex") !== sha256
@@ -43,6 +55,13 @@ export function extractVerifiedExecutable(
       "CLIProxyAPI archive checksum verification failed.",
     );
   }
+}
+
+export function extractVerifiedExecutable(
+  archive: Uint8Array,
+  sha256: string,
+): Uint8Array {
+  verifyArchive(archive, sha256);
   const entries = unzipSync(archive, {
     filter: (entry) =>
       entry.name === "cli-proxy-api.exe" &&
@@ -58,9 +77,49 @@ export function extractVerifiedExecutable(
   return executable;
 }
 
+export async function extractVerifiedTarExecutable(
+  archive: Uint8Array,
+  sha256: string,
+): Promise<Uint8Array> {
+  verifyArchive(archive, sha256);
+  const bytes = gunzipSync(archive, { maxOutputLength: MAX_EXECUTABLE_BYTES });
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let matches = 0;
+    const parser = new Parser({
+      strict: true,
+      onReadEntry: (entry) => {
+        if (
+          entry.path === "cli-proxy-api" &&
+          entry.type === "File" &&
+          entry.size > 0 &&
+          entry.size <= MAX_EXECUTABLE_BYTES
+        ) {
+          matches++;
+          entry.on("data", (chunk: Buffer) => chunks.push(chunk));
+        } else entry.resume();
+      },
+    });
+    parser.on("error", reject);
+    parser.on("end", () => {
+      if (matches !== 1 || chunks.length === 0)
+        reject(
+          new GatewayError(
+            "integrity",
+            "The release archive has no valid gateway executable.",
+          ),
+        );
+      else resolve(Buffer.concat(chunks));
+    });
+    parser.end(bytes);
+  });
+}
+
 const installationSchema = z.object({
   version: z.literal(PROXY_VERSION),
   sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  platform: z.string().optional(),
+  architecture: z.string().optional(),
 });
 
 export class ProxyInstaller {
@@ -69,7 +128,10 @@ export class ProxyInstaller {
   private installation: Promise<string> | undefined;
 
   constructor(private readonly directory: string) {
-    this.executable = join(directory, "CLIProxyAPI.exe");
+    this.executable = join(
+      directory,
+      process.platform === "win32" ? "CLIProxyAPI.exe" : "CLIProxyAPI",
+    );
     this.receipt = join(directory, "installation.json");
   }
 
@@ -79,6 +141,16 @@ export class ProxyInstaller {
         JSON.parse(await readFile(this.receipt, "utf8")),
       );
       if (!receipt.success) return false;
+      if (
+        receipt.data.platform !== undefined &&
+        receipt.data.platform !== process.platform
+      )
+        return false;
+      if (
+        receipt.data.architecture !== undefined &&
+        receipt.data.architecture !== process.arch
+      )
+        return false;
       const binary = await readFile(this.executable);
       return (
         createHash("sha256").update(binary).digest("hex") ===
@@ -103,13 +175,8 @@ export class ProxyInstaller {
   }
 
   private async download(): Promise<string> {
-    if (process.platform !== "win32")
-      throw new GatewayError(
-        "download",
-        "Managed engine installation currently supports Windows.",
-      );
-    if (await this.isInstalled()) return this.executable;
     const release = releaseFor(process.arch);
+    if (await this.isInstalled()) return this.executable;
     const response = await ky.get(release.url, {
       timeout: 120_000,
       signal: AbortSignal.timeout(120_000),
@@ -138,10 +205,9 @@ export class ProxyInstaller {
     } finally {
       await reader.cancel();
     }
-    const executable = extractVerifiedExecutable(
-      Buffer.concat(chunks),
-      release.sha256,
-    );
+    const executable = await (process.platform === "win32"
+      ? extractVerifiedExecutable
+      : extractVerifiedTarExecutable)(Buffer.concat(chunks), release.sha256);
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
     const temporary = `${this.executable}.download`;
     await writeFile(temporary, executable, { mode: 0o700 });
@@ -150,6 +216,8 @@ export class ProxyInstaller {
       this.receipt,
       JSON.stringify({
         version: PROXY_VERSION,
+        platform: process.platform,
+        architecture: process.arch,
         sha256: createHash("sha256").update(executable).digest("hex"),
       }),
       { mode: 0o600 },

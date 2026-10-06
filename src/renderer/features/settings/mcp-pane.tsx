@@ -74,7 +74,7 @@ export function McpPane() {
       </p>
       <p>
         Claude Code, Codex, Antigravity는 터미널에서 선택한 도구 연결을
-        사용합니다. 앱 안 PowerShell에서 실행한 CLI에도 적용됩니다.
+        사용합니다. 앱 안 셸에서 실행한 CLI에도 적용됩니다.
       </p>
       <p>
         Antigravity 1.2.17의 OpenAI 모델 경로는 도구 목록만 표시하며 CLI

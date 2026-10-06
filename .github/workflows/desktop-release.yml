@@ -1,0 +1,59 @@
+name: Desktop packages
+
+on:
+  push:
+    branches: [feat/desktop-releases]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            runner: windows-2025
+          - name: macos-arm64
+            runner: macos-15
+          - name: macos-x64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.11.1'
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.14'
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run lint
+      - run: bun run test
+      - run: bun run package:desktop
+      - run: bun run test:release
+      - run: bun run archive:release
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.name }}
+          path: release/assets/*
+          if-no-files-found: error
+          compression-level: 0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: evidence-${{ matrix.name }}
+          path: test-results/
+          retention-days: 14

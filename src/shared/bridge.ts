@@ -26,6 +26,7 @@ export type ModelSnapshot = {
 };
 
 export interface DesktopBridge {
+  readonly shellName: "PowerShell" | "Bash";
   readonly launchSettings: () => Promise<LaunchSettings>;
   readonly saveLaunchSelection: (
     selection: LaunchSelection,

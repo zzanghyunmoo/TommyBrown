@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vitest";
@@ -53,7 +60,9 @@ it("searches local Markdown without hidden metadata or linked directories and va
   const uri = new URL(opened[0] ?? "");
   expect(uri.protocol).toBe("obsidian:");
   expect(uri.hostname).toBe("open");
-  expect(uri.searchParams.get("path")).toBe(join(root, "notes", "hello.md"));
+  expect(uri.searchParams.get("path")).toBe(
+    await realpath(join(root, "notes", "hello.md")),
+  );
   await expect(
     service.open({ spaceId, path: "escape/secret.md" }),
   ).rejects.toThrow(/outside/i);

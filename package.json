@@ -6,6 +6,7 @@
   "type": "module",
   "main": "dist/main/index.cjs",
   "scripts": {
+    "postinstall": "bun run scripts/prepare-native.ts",
     "check": "tsc --noEmit",
     "lint": "biome check .",
     "test": "vitest run",
@@ -13,6 +14,9 @@
     "smoke:proxy": "bun run scripts/proxy-smoke.ts",
     "build": "bun run scripts/build.ts",
     "package:windows": "bun run build && bun run scripts/package-windows.ts",
+    "package:desktop": "bun run build && bun run scripts/package-desktop.ts",
+    "test:release": "node scripts/test-release.ts",
+    "archive:release": "bun run scripts/archive-release.ts",
     "start": "electron .",
     "test:desktop": "playwright test",
     "doctor:react": "react-doctor . --verbose"
@@ -37,6 +41,7 @@
     "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "tar": "7.5.22",
     "zod": "4.6.5"
   },
   "devDependencies": {

@@ -1,31 +1,41 @@
-import { readFile, stat } from "node:fs/promises";
+import { constants } from "node:fs";
+import { access, readFile, stat } from "node:fs/promises";
 import { delimiter, dirname, extname, join } from "node:path";
 import { z } from "zod";
+import { desktopPath } from "./posix";
 
 async function executableOnPath(
   name: string,
   fallback: readonly string[] = [],
 ): Promise<string> {
   const path =
-    Object.entries(process.env).find(
-      ([key]) => key.toLowerCase() === "path",
-    )?.[1] ?? "";
+    process.platform === "darwin"
+      ? desktopPath()
+      : (Object.entries(process.env).find(
+          ([key]) => key.toLowerCase() === "path",
+        )?.[1] ?? "");
   for (const directory of [
     ...path.split(delimiter).filter(Boolean),
     ...fallback,
   ]) {
-    for (const extension of [".exe", ".com", ".cmd", ".bat"]) {
+    for (const extension of process.platform === "win32"
+      ? [".exe", ".com", ".cmd", ".bat"]
+      : [""]) {
       const candidate = join(
         directory.replace(/^"|"$/g, ""),
         `${name}${extension}`,
       );
       try {
-        if ((await stat(candidate)).isFile()) return candidate;
+        if ((await stat(candidate)).isFile()) {
+          if (process.platform !== "win32")
+            await access(candidate, constants.X_OK);
+          return candidate;
+        }
       } catch (error) {
         if (
           !(error instanceof Error) ||
           !("code" in error) ||
-          !["ENOENT", "ENOTDIR"].includes(String(error.code))
+          !["ENOENT", "ENOTDIR", "EACCES"].includes(String(error.code))
         )
           throw error;
       }
@@ -37,6 +47,11 @@ async function executableOnPath(
 }
 
 export async function resolveCli(cli: "claude" | "codex" | "antigravity") {
+  if (process.platform !== "win32")
+    return {
+      executable: await executableOnPath(cli === "antigravity" ? "agy" : cli),
+      args: [],
+    };
   if (cli === "antigravity") {
     const local = process.env["LOCALAPPDATA"];
     const path = await executableOnPath(

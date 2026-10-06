@@ -13,6 +13,7 @@ import {
 } from "../../shared/terminal";
 import type { ConnectorSession } from "../connectors/profiles";
 import type { WorkspaceStore } from "../workspace/store";
+import { bashProfile, desktopPath } from "./posix";
 import { powerShellProfile } from "./powershell";
 import { resolveCli } from "./resolve-cli";
 
@@ -45,8 +46,8 @@ export class TerminalService {
   async launch(input: unknown): Promise<TerminalInfo> {
     if (this.stopping) throw new Error("The application is shutting down.");
     const request = terminalLaunchSchema.parse(input);
-    if (process.platform !== "win32")
-      throw new Error("Interactive terminals currently support Windows.");
+    if (process.platform !== "win32" && process.platform !== "darwin")
+      throw new Error("Interactive terminals support Windows and macOS.");
     if (this.sessions.size + this.launching >= 16)
       throw new Error("Close a terminal before opening another (limit 16).");
     this.launching++;
@@ -58,7 +59,10 @@ export class TerminalService {
       connectors = await this.profiles.connectors?.(request.connectors);
       const profile =
         request.cli === "powershell"
-          ? await (this.profiles.shell?.(connectors) ?? powerShellProfile())
+          ? await (this.profiles.shell?.(connectors) ??
+              (process.platform === "win32"
+                ? powerShellProfile()
+                : bashProfile()))
           : request.model === null
             ? { executable: request.cli, args: [], environment: {} }
             : await this.profiles.model({
@@ -77,6 +81,7 @@ export class TerminalService {
       for (const [key, value] of Object.entries(process.env))
         if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE")
           env[key] = value;
+      if (process.platform === "darwin") env["PATH"] = desktopPath();
       for (const [key, value] of Object.entries({
         ...profile?.environment,
         ...connectorProfile.environment,
@@ -100,7 +105,7 @@ export class TerminalService {
         FORCE_COLOR: "3",
         CLICOLOR: "1",
       });
-      let executable = "powershell.exe";
+      let executable = profile.executable;
       let args = [...(profile?.args ?? ["-NoLogo", "-NoProfile"])];
       if (profile && request.cli !== "powershell") {
         const target = await resolveCli(request.cli);

@@ -5,8 +5,8 @@ import { expect, it } from "vitest";
 import { TerminalService } from "../../src/main/terminal/service";
 import { WorkspaceStore } from "../../src/main/workspace/store";
 
-it.skipIf(process.platform !== "win32")(
-  "uses a real Windows PTY, retains output, resizes, and owns shutdown",
+it.skipIf(!["win32", "darwin"].includes(process.platform))(
+  "uses a real native PTY, retains output, resizes, and owns shutdown",
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "tommybrown-terminal-"));
     const store = await WorkspaceStore.open(join(directory, "state.json"));
@@ -47,7 +47,10 @@ it.skipIf(process.platform !== "win32")(
       terminal.resize({ id: session.id, columns: 110, rows: 30 });
       terminal.write({
         id: session.id,
-        data: "Write-Output ('tommybrown-' + 'pty-ready')\r",
+        data:
+          process.platform === "win32"
+            ? "Write-Output ('tommybrown-' + 'pty-ready')\r"
+            : "printf '%s%s\\n' 'tommybrown-' 'pty-ready'\r",
       });
       await expect
         .poll(() => terminal.attach(session.id).data, { timeout: 10_000 })
