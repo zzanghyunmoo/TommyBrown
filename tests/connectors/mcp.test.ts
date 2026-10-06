@@ -5,8 +5,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vitest";
 import { z } from "zod";
+import { McpGateway } from "../../src/main/connectors/gateway";
 import { ConnectorMcp } from "../../src/main/connectors/mcp";
-import { connectorProfile } from "../../src/main/connectors/profiles";
+import { ConnectorProfiles } from "../../src/main/connectors/profiles";
 import {
   ConnectorStore,
   type SecretCodec,
@@ -178,7 +179,7 @@ it("rejects credential-bearing and unencrypted remote MCP endpoints", () => {
     "http://127.0.0.1:5000/mcp",
   );
 });
-it("passes MCP secrets only in each CLI process environment", async () => {
+it("gives all three CLIs one revocable gateway without exposing upstream credentials", async () => {
   const { store } = await fixture();
   const [connector] = await store.add({
     kind: "github",
@@ -188,27 +189,35 @@ it("passes MCP secrets only in each CLI process environment", async () => {
     token: "fixture-only-secret",
   });
   if (!connector) throw new Error("No connector");
-  const name = `tommybrown_${connector.id.replaceAll("-", "")}`;
-  expect(() => connectorProfile(store, "antigravity", [connector.id])).toThrow(
-    /does not support per-session/,
-  );
-  expect(connectorProfile(store, "antigravity", [])).toEqual({
-    args: [],
-    environment: {},
-  });
-  for (const cli of ["claude", "codex"] as const) {
-    const profile = connectorProfile(store, cli, [connector.id]);
-    expect(profile.args.join(" ")).not.toContain("fixture-only-secret");
-    expect(profile.environment[`${name.toUpperCase()}_TOKEN`]).toBe(
-      "fixture-only-secret",
-    );
-    expect(profile.args.join(" ")).toContain("https://example.com/mcp");
-    if (cli === "codex")
-      expect(profile.args.join(" ")).toContain("bearer_token_env_var");
-    else expect(profile.args.join(" ")).toContain("Bearer ${");
+  const directory = await mkdtemp(join(tmpdir(), "tommybrown-profile-"));
+  cleanup.push(() => rm(directory, { recursive: true, force: true }));
+  const gateway = new McpGateway(store);
+  await gateway.start();
+  cleanup.push(() => gateway.stop());
+  const profiles = await ConnectorProfiles.open(directory, gateway);
+  const session = await profiles.create([connector.id]);
+  cleanup.push(() => session.dispose());
+  for (const cli of ["claude", "codex", "antigravity"] as const) {
+    const profile = session.profile(cli);
+    expect(JSON.stringify(profile)).not.toContain("fixture-only-secret");
+    expect(JSON.stringify(profile)).not.toContain("https://example.com/mcp");
+    expect(profile.args).not.toHaveLength(0);
   }
+  const file = session.profile("claude").args[1];
+  if (!file) throw new Error("No session config");
+  const config = JSON.parse(await readFile(file, "utf8"));
+  expect(config.mcpServers.tommybrown.url).toMatch(
+    /^http:\/\/127.0.0.1:\d+\/mcp$/,
+  );
+  expect(config.mcpServers.tommybrown.headers.Authorization).toBe(
+    `Bearer ${session.profile("codex").environment["TOMMYBROWN_MCP_TOKEN"]}`,
+  );
+  expect(gateway.status().sessions).toBe(1);
+  await session.dispose();
+  expect(gateway.status().sessions).toBe(0);
+  await expect(readFile(file)).rejects.toThrow();
   await store.remove(connector.id);
-  expect(() => connectorProfile(store, "codex", [connector.id])).toThrow(
+  await expect(profiles.create([connector.id])).rejects.toThrow(
     /no longer available/,
   );
-});
+}, 15000);

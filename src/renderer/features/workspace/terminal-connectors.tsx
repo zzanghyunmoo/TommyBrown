@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Connector } from "../../../shared/connectors";
+import { type Connector, isMcpConnector } from "../../../shared/connectors";
 import { Notice } from "../../components/primitives";
 
 export function TerminalConnectors({
@@ -21,7 +21,7 @@ export function TerminalConnectors({
         void window.connectors
           .list()
           .then((next) => {
-            setList(next.filter((item) => item.endpoint));
+            setList(next.filter(isMcpConnector));
             setError(undefined);
           })
           .catch((failure: unknown) => {

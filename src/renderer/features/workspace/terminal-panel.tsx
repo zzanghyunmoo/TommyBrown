@@ -75,8 +75,7 @@ export function TerminalPanel({
         cli,
         model: cli === "powershell" || !model ? null : model,
         mappingRevision: modelSnapshot?.mappingRevision,
-        connectors:
-          cli === "powershell" || cli === "antigravity" ? [] : connectors,
+        connectors,
       }),
     );
     if (session) {
@@ -197,15 +196,11 @@ export function TerminalPanel({
       {terminals.error && <Notice error>{terminals.error}</Notice>}
       {modelError && <Notice error>{modelError}</Notice>}
       {selection.error && <Notice error>{selection.error}</Notice>}
-      {cli === "antigravity" ? (
-        <p className="cli-note">Antigravity의 MCP 연결은 CLI에서 관리합니다.</p>
-      ) : (
-        <TerminalConnectors
-          selected={connectors}
-          change={setConnectors}
-          disabled={cli === "powershell"}
-        />
-      )}
+      <TerminalConnectors
+        selected={connectors}
+        change={setConnectors}
+        disabled={false}
+      />
       <div className="terminal-tabs" role="tablist" aria-label="터미널 탭">
         {sessions.map((session, index) => (
           <div className="terminal-tab" key={session.id}>

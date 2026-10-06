@@ -11,6 +11,7 @@ import {
   terminalLaunchSchema,
   terminalResizeSchema,
 } from "../../shared/terminal";
+import type { ConnectorSession } from "../connectors/profiles";
 import type { WorkspaceStore } from "../workspace/store";
 import { powerShellProfile } from "./powershell";
 import { resolveCli } from "./resolve-cli";
@@ -22,15 +23,13 @@ type Session = {
   sequence: number;
   readonly exited: Promise<void>;
   closing?: Promise<void>;
+  readonly connectors: ConnectorSession | undefined;
 };
 
 type TerminalProfiles = {
   readonly model: (request: LaunchRequest) => Promise<LaunchProfile>;
-  readonly shell?: () => Promise<LaunchProfile>;
-  readonly connectors?: (
-    cli: LaunchRequest["cli"],
-    ids: readonly string[],
-  ) => Pick<LaunchProfile, "args" | "environment">;
+  readonly shell?: (connectors?: ConnectorSession) => Promise<LaunchProfile>;
+  readonly connectors?: (ids: readonly string[]) => Promise<ConnectorSession>;
 };
 
 export class TerminalService {
@@ -48,18 +47,18 @@ export class TerminalService {
     const request = terminalLaunchSchema.parse(input);
     if (process.platform !== "win32")
       throw new Error("Interactive terminals currently support Windows.");
-    if (request.cli === "powershell" && request.connectors.length)
-      throw new Error("Choose a coding CLI to use connectors.");
     if (this.sessions.size + this.launching >= 16)
       throw new Error("Close a terminal before opening another (limit 16).");
     this.launching++;
+    let connectors: ConnectorSession | undefined;
     try {
       const space = this.spaces.requireSpace(request.spaceId);
       if (!(await stat(space.root)).isDirectory())
         throw new Error("This space's directory is unavailable.");
+      connectors = await this.profiles.connectors?.(request.connectors);
       const profile =
         request.cli === "powershell"
-          ? await (this.profiles.shell?.() ?? powerShellProfile())
+          ? await (this.profiles.shell?.(connectors) ?? powerShellProfile())
           : request.model === null
             ? { executable: request.cli, args: [], environment: {} }
             : await this.profiles.model({
@@ -70,7 +69,7 @@ export class TerminalService {
       const connectorProfile =
         request.cli === "powershell"
           ? { args: [], environment: {} }
-          : (this.profiles.connectors?.(request.cli, request.connectors) ?? {
+          : (connectors?.profile(request.cli) ?? {
               args: [],
               environment: {},
             });
@@ -132,7 +131,14 @@ export class TerminalService {
       const exited = new Promise<void>((resolve) => {
         finish = resolve;
       });
-      const session: Session = { info, pty, buffer: "", sequence: 0, exited };
+      const session: Session = {
+        info,
+        pty,
+        buffer: "",
+        sequence: 0,
+        exited,
+        connectors,
+      };
       this.sessions.set(id, session);
       pty.onData((data) => {
         session.sequence++;
@@ -142,9 +148,15 @@ export class TerminalService {
       pty.onExit(({ exitCode }) => {
         session.info = { ...session.info, phase: "exited", exitCode };
         this.emit({ type: "exit", id, exitCode });
+        void session.connectors
+          ?.dispose()
+          .catch(() => console.warn("MCP session files could not be removed."));
         finish();
       });
       return { ...info };
+    } catch (error) {
+      await connectors?.dispose();
+      throw error;
     } finally {
       this.launching--;
     }
@@ -195,6 +207,7 @@ export class TerminalService {
     );
   }
   private async closeSession(session: Session): Promise<void> {
+    session.connectors?.revoke();
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       if (session.info.phase === "running") session.pty.kill();
@@ -210,6 +223,7 @@ export class TerminalService {
           );
         }),
       ]);
+      await session.connectors?.dispose();
       this.sessions.delete(session.info.id);
       this.emit({ type: "closed", id: session.info.id });
     } finally {

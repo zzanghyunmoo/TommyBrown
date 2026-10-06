@@ -1,9 +1,10 @@
 import { join } from "node:path";
-import { safeStorage } from "electron";
+import { app, safeStorage } from "electron";
 import { z } from "zod";
 import { browserGroupSchema } from "../../shared/browser";
 import type { BrowserService } from "../browser/service";
 import { ConnectorMcp } from "./mcp";
+import { MemoryConnector } from "./memory";
 import { ConnectorStore } from "./store";
 
 export async function registerConnectors(
@@ -11,7 +12,7 @@ export async function registerConnectors(
   browser: BrowserService,
   bind: (channel: string, action: (input: unknown) => unknown) => void,
   closeSessions: (id: string) => Promise<void>,
-): Promise<ConnectorStore> {
+): Promise<{ store: ConnectorStore; mcp: ConnectorMcp }> {
   if (!safeStorage.isEncryptionAvailable())
     throw new Error("OS credential encryption is required for connectors.");
   const store = await ConnectorStore.open(
@@ -21,9 +22,17 @@ export async function registerConnectors(
       decrypt: (buffer) => safeStorage.decryptString(buffer),
     },
   );
-  const mcp = new ConnectorMcp(store);
+  const mcp = new ConnectorMcp(
+    store,
+    new MemoryConnector({
+      directory: join(directory, "memory"),
+      executable: process.execPath,
+      script: join(app.getAppPath(), "dist", "main", "memory.cjs"),
+    }),
+  );
   bind("connectors:list", () => store.list());
   bind("connectors:add", (input) => store.add(input));
+  bind("connectors:set-tools", (input) => store.setTools(input));
   bind("connectors:open", (input) => {
     const request = z
       .object({ id: z.uuid(), group: browserGroupSchema })
@@ -39,5 +48,5 @@ export async function registerConnectors(
   });
   bind("connectors:check", (input) => mcp.check(z.uuid().parse(input)));
   bind("connectors:call", (input) => mcp.call(input));
-  return store;
+  return { store, mcp };
 }

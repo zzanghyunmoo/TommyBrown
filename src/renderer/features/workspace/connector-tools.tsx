@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  allowsTool,
   type Connector,
   type ConnectorTool,
   connectorCallSchema,
@@ -78,12 +79,16 @@ export function ConnectorTools({
           )}
           <Button
             busy={busy}
+            disabled={!allowsTool(connector, tool.name)}
             onClick={() => {
               void call();
             }}
           >
             도구 실행
           </Button>
+          {!allowsTool(connector, tool.name) && (
+            <p>저장된 권한에서 차단한 도구입니다.</p>
+          )}
         </>
       )}
       {error && <Notice error>{error}</Notice>}

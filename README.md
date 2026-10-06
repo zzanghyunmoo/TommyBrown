@@ -98,9 +98,28 @@ by CLIProxyAPI and are not encrypted by TommyBrown itself.
 - For agent data and tools, configure a trusted Streamable HTTP MCP endpoint and an
   optional bearer token. Web login is separate from MCP authentication. Inspect and
   explicitly run tools in the connector pane, or select connections for a new CLI session.
-  Per-session connector injection supports Claude Code and Codex. Manage Antigravity
-  MCP connections in its own CLI; TommyBrown does not rewrite that global configuration.
+  The app starts a shared `tommybrown` MCP gateway automatically. Select connectors
+  before opening Claude Code, Codex, Antigravity or PowerShell; the three CLI commands
+  inside that PowerShell inherit the same selection. Global CLI configuration is unchanged.
+  Each terminal receives a short-lived gateway credential; upstream tokens stay in the app.
+  Claude Code and Codex have passed real MCP tool calls through the gateway. Antigravity
+  1.2.17 discovers its tools, but its OpenAI model transport omits tool declarations and
+  ignores tool-call responses. Actual tool invocation on that route remains blocked.
   OAuth-only MCP servers require an issued token or a compatible local adapter.
+  The shared gateway exposes tools; MCP resources and prompts are not aggregated.
+- Choose **Context7** in the connector form for the official documentation MCP
+  endpoint. Anonymous access works at the service's lower rate limit; an optional
+  API key goes in the access-token field. Choose **Memory** for the bundled official
+  memory server (`@modelcontextprotocol/server-memory` 2026.8.31). It stores a local
+  graph per connector in protected application data, survives restarts, and needs
+  neither a global installation nor a login. Removing its connector retains the
+  graph file; it does not erase remembered data.
+- Click **도구 확인**, choose tools under **에이전트 도구 권한**, and click
+  **권한 저장**. All-tools mode includes future tools; selecting individual tools
+  creates an allowlist and excludes future additions. An empty selection blocks
+  every tool. Saved restrictions apply to tool discovery, manual execution and
+  agent calls, including cached tool names in existing sessions. Already dispatched
+  operations are not undone. Start a new CLI session if its visible catalog is stale.
 - Choose a local Obsidian vault to browse, search, preview, and edit Markdown offline.
   The Obsidian button opens the installed local app. Vault use does not require Sync
   or upload notes; remote images are suppressed in previews.
@@ -110,6 +129,17 @@ view settings, and connector definitions restore
 after restart. Save drafts before quitting. Running processes and terminal output do not
 resume after an application restart. Disconnecting a connector stops terminals using it
 and removes its local definition, stored token, and embedded browser session.
+Gateway access is revoked on terminal exit, launch failure or disconnection. Temporary
+MCP configuration files contain only a local session credential and are stored in the
+app's protected data directory. They are removed at exit or cleaned on the next startup;
+credentials from a previous app run are invalid.
+
+See the [shared MCP checkpoint](docs/verification/2026-10-06-shared-mcp-gateway.md)
+for native CLI results and the remaining Antigravity limitation.
+See the [tool permissions checkpoint](docs/verification/2026-10-06-mcp-tool-permissions.md)
+for Context7/Memory execution, saved allowlists, and packaged desktop verification.
+After building, `bun run scripts/mcp-smoke.ts` exercises both real MCP servers using
+public documentation queries and temporary synthetic memory data.
 
 ## Workbench shortcuts
 

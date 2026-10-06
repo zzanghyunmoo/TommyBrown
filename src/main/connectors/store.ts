@@ -1,9 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { readFile, rename, rm, writeFile } from "node:fs/promises";
 import { z } from "zod";
-import { type Connector, connectorInputSchema } from "../../shared/connectors";
+import {
+  type Connector,
+  connectorInputSchema,
+  connectorToolPolicySchema,
+} from "../../shared/connectors";
 
-const recordSchema = connectorInputSchema.extend({ id: z.uuid() });
+const recordSchema = connectorInputSchema.extend({
+  id: z.uuid(),
+  allowedTools: connectorToolPolicySchema.shape.allowedTools.default(null),
+});
 const stateSchema = z.object({
   version: z.literal(1),
   connectors: z.array(recordSchema).max(32),
@@ -48,11 +55,39 @@ export class ConnectorStore {
     return { ...connector };
   }
   add(input: unknown): Promise<readonly Connector[]> {
-    const record = { ...connectorInputSchema.parse(input), id: randomUUID() };
+    const record = recordSchema.parse({
+      ...connectorInputSchema.parse(input),
+      id: randomUUID(),
+    });
+    if (
+      record.kind === "memory" &&
+      (record.endpoint !== null || record.token !== null)
+    )
+      throw new Error("Local Memory does not use an endpoint or token.");
     return this.mutate((state) => ({
       ...state,
       connectors: [...state.connectors, record],
     }));
+  }
+  setTools(input: unknown): Promise<readonly Connector[]> {
+    const policy = connectorToolPolicySchema.parse(input);
+    return this.mutate((state) => {
+      this.require(policy.id);
+      return {
+        ...state,
+        connectors: state.connectors.map((connector) =>
+          connector.id === policy.id
+            ? {
+                ...connector,
+                allowedTools:
+                  policy.allowedTools === null
+                    ? null
+                    : [...new Set(policy.allowedTools)],
+              }
+            : connector,
+        ),
+      };
+    });
   }
   remove(id: string): Promise<readonly Connector[]> {
     return this.mutate((state) => {

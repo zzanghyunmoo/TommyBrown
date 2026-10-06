@@ -111,7 +111,7 @@ console.log('routed-cli-ready');`,
     await expect(page.locator(".xterm-rows")).toContainText("routed-cli-ready");
     const direct: unknown = JSON.parse(await readFile(capture, "utf8"));
     expect(direct).toMatchObject({
-      args: ["--model", "fable"],
+      args: ["--model", "fable", "--mcp-config", expect.any(String)],
       fable: modelAlias("codex", target),
     });
     await page.getByLabel("claude 1 종료", { exact: true }).click();
@@ -138,7 +138,13 @@ console.log('routed-cli-ready');`,
     await expect
       .poll(async () => JSON.parse(await readFile(capture, "utf8")))
       .toMatchObject({
-        args: ["--model", "tb-agy-codex-astra", "--fixture"],
+        args: [
+          "--model",
+          "tb-agy-codex-astra",
+          "--add-dir",
+          expect.any(String),
+          "--fixture",
+        ],
         agyModel: "tb-agy-codex-astra",
         hasAgyKey: true,
       });
@@ -149,7 +155,13 @@ console.log('routed-cli-ready');`,
     await expect
       .poll(async () => JSON.parse(await readFile(capture, "utf8")))
       .toMatchObject({
-        args: ["--model", "fable", "--fixture"],
+        args: [
+          "--model",
+          "fable",
+          "--mcp-config",
+          expect.any(String),
+          "--fixture",
+        ],
         fable: modelAlias("codex", target),
       });
     await nativeCapture(reopened, "test-results/cli-restart-native.png");

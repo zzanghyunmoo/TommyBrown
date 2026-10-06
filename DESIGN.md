@@ -118,6 +118,10 @@ always clamps to the IPC contract.
   Arrow/Home/End navigation within pane groups. Dirty documents show an unsaved marker.
 - **Notice**: wrapping inline information/failure with a recovery action when applicable.
 - **Guide disclosure**: native details/summary keeps setup help available on demand.
+- **MCP permissions**: a labelled fieldset with native checkboxes, tool names and
+  descriptions; all/none shortcuts and an explicit save button. Saved and unsaved
+  states use text, with inline errors and a polite save status. All-tools mode
+  explains that future tools are included. Use the existing space/type/color tokens.
 - **Workbench pane**: 36px tabs, focused wash, zoom/close controls, bounded body.
   Closing a split preserves the primary document host and its unsaved changes.
 - **Splitter**: pointer capture, keyboard arrows in 5% steps, Home/End bounds, labelled

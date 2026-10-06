@@ -20,6 +20,12 @@ export const connectorPresets = [
   { kind: "notion", name: "Notion", url: "https://www.notion.so/" },
   { kind: "gitlab", name: "GitLab", url: "https://gitlab.com/" },
   { kind: "github", name: "GitHub", url: "https://github.com/" },
+  { kind: "context7", name: "Context7", url: "https://context7.com/" },
+  {
+    kind: "memory",
+    name: "Memory",
+    url: "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
+  },
 ] as const;
 export function mcpEndpoint(input: unknown): string {
   const url = new URL(browserUrl(input));
@@ -47,7 +53,25 @@ export type ConnectorInput = z.input<typeof connectorInputSchema>;
 export type Connector = Omit<z.output<typeof connectorInputSchema>, "token"> & {
   readonly id: string;
   readonly hasToken: boolean;
+  readonly allowedTools: readonly string[] | null;
 };
+export const connectorToolPolicySchema = z.object({
+  id: z.uuid(),
+  allowedTools: z.array(z.string().min(1).max(200)).max(500).nullable(),
+});
+export function isMcpConnector(
+  connector: Pick<Connector, "kind" | "endpoint">,
+): boolean {
+  return connector.kind === "memory" || connector.endpoint !== null;
+}
+export function allowsTool(
+  connector: Pick<Connector, "allowedTools">,
+  name: string,
+): boolean {
+  return (
+    connector.allowedTools === null || connector.allowedTools.includes(name)
+  );
+}
 export type ConnectorTool = {
   readonly name: string;
   readonly description: string;
@@ -58,14 +82,22 @@ export type ConnectorCheck = {
   readonly tools: readonly ConnectorTool[];
   readonly checkedAt: string;
 };
+export type McpGatewayStatus = {
+  readonly running: boolean;
+  readonly sessions: number;
+};
 export const connectorCallSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1).max(200),
   arguments: z.record(z.string(), z.unknown()),
 });
 export interface ConnectorBridge {
+  readonly gateway: () => Promise<McpGatewayStatus>;
   readonly list: () => Promise<readonly Connector[]>;
   readonly add: (input: ConnectorInput) => Promise<readonly Connector[]>;
+  readonly setTools: (
+    input: z.infer<typeof connectorToolPolicySchema>,
+  ) => Promise<readonly Connector[]>;
   readonly disconnect: (id: string) => Promise<readonly Connector[]>;
   readonly open: (id: string, group?: string) => Promise<BrowserState>;
   readonly check: (id: string) => Promise<ConnectorCheck>;
