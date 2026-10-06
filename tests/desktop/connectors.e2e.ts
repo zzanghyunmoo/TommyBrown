@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { createServer } from "node:http";
 import { resolve } from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
@@ -39,34 +39,25 @@ test("connector screens use separate persistent sessions and disconnect clears l
     }, project);
     const page = await desktopWindow(desktop);
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
-    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
-    const panel = page.getByRole("region", { name: "커넥터 설정" });
-    await panel.getByLabel("서비스", { exact: true }).selectOption("github");
-    await panel.getByLabel("연결 이름", { exact: true }).fill("Fixture source");
+    await page.getByRole("tab", { name: "웹 앱", exact: true }).click();
+    const panel = page.getByRole("region", { name: "웹 앱 설정" });
+    await panel
+      .getByLabel("웹 앱 종류", { exact: true })
+      .selectOption("github");
+    await panel
+      .getByLabel("웹 앱 이름", { exact: true })
+      .fill("Fixture source");
     await panel.getByLabel("웹 앱 주소", { exact: true }).fill(url);
+    await expect(panel.getByLabel("MCP 주소", { exact: true })).toHaveCount(0);
     await panel
-      .getByText("MCP 데이터·도구 연결 (선택)", { exact: true })
-      .click();
-    await panel
-      .getByLabel("액세스 토큰", { exact: true })
-      .fill("native-secret-fixture");
-    await panel
-      .getByRole("button", { name: "커넥터 추가", exact: true })
+      .getByRole("button", { name: "웹 앱 추가", exact: true })
       .click();
     await expect(
       panel.getByRole("heading", { name: "Fixture source" }),
     ).toBeVisible();
-    expect(
-      await panel.getByLabel("액세스 토큰", { exact: true }).inputValue(),
-    ).toBe("");
     const list = await page.evaluate(() => window.connectors.list());
     connectorId = list[0]?.id ?? "";
-    expect(JSON.stringify(list)).not.toContain("native-secret-fixture");
-    expect(
-      (await readFile(resolve(data, "connectors.encrypted"))).includes(
-        Buffer.from("native-secret-fixture"),
-      ),
-    ).toBe(false);
+    expect(list[0]?.endpoint).toBeNull();
     await page.screenshot({ path: "test-results/connector-registry.png" });
     await panel
       .getByRole("heading", { name: "Fixture source" })
@@ -121,7 +112,7 @@ test("connector screens use separate persistent sessions and disconnect clears l
         ),
       )
       .toEqual([connectorId]);
-    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
+    await page.getByRole("tab", { name: "웹 앱", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Fixture source" }),
     ).toBeVisible();
@@ -139,7 +130,7 @@ test("connector screens use separate persistent sessions and disconnect clears l
     page.once("dialog", (dialog) => {
       void dialog.accept();
     });
-    await page.getByRole("button", { name: "연결 해제", exact: true }).click();
+    await page.getByRole("button", { name: "웹 앱 제거", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Fixture source" }),
     ).toHaveCount(0);

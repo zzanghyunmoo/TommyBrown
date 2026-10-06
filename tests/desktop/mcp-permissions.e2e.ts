@@ -31,13 +31,19 @@ test("Memory permissions control existing gateway sessions and persist with reme
     }, project);
     const page = await desktopWindow(desktop);
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
-    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
-    await page.getByLabel("서비스", { exact: true }).selectOption("memory");
+    await page
+      .getByRole("navigation", { name: "열린 화면" })
+      .getByRole("button", { name: "설정", exact: true })
+      .click();
+    await page
+      .getByRole("tab", { name: "MCP 게이트웨이", exact: true })
+      .click();
+    await page.getByLabel("MCP 종류", { exact: true }).selectOption("memory");
     await expect(
       page.getByText("별도 설치나 로그인", { exact: false }),
     ).toBeVisible();
     await page
-      .getByRole("button", { name: "커넥터 추가", exact: true })
+      .getByRole("button", { name: "MCP 서버 추가", exact: true })
       .click();
     const card = page.locator(".connector-card").filter({
       has: page.getByRole("heading", { name: "Memory", exact: true }),
@@ -66,6 +72,10 @@ test("Memory permissions control existing gateway sessions and persist with reme
     ).toContainText("Desktop synthetic memory");
     connectorId =
       (await page.evaluate(() => window.connectors.list()))[0]?.id ?? "";
+    await page
+      .getByRole("navigation", { name: "열린 화면" })
+      .getByRole("button", { name: "project", exact: true })
+      .click();
     await page.getByRole("tab", { name: "터미널", exact: true }).click();
     await page.locator(".terminal-connectors summary").click();
     await page.getByLabel("Memory", { exact: true }).check();
@@ -111,7 +121,13 @@ test("Memory permissions control existing gateway sessions and persist with reme
       tool.name.startsWith("delete_entities_"),
     );
     if (!forbidden) throw new Error("Missing delete tool");
-    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
+    await page
+      .getByRole("navigation", { name: "열린 화면" })
+      .getByRole("button", { name: "설정", exact: true })
+      .click();
+    await page
+      .getByRole("tab", { name: "MCP 게이트웨이", exact: true })
+      .click();
     await card.getByRole("button", { name: "전체 차단", exact: true }).click();
     await card.getByRole("checkbox", { name: /^read_graph\b/ }).check();
     await card.getByRole("button", { name: "권한 저장", exact: true }).click();
@@ -143,7 +159,7 @@ test("Memory permissions control existing gateway sessions and persist with reme
         .scrollIntoViewIfNeeded();
       await nativeCapture(desktop, `test-results/mcp-permissions-${theme}.png`);
     }
-    await page.getByLabel("서비스", { exact: true }).selectOption("context7");
+    await page.getByLabel("MCP 종류", { exact: true }).selectOption("context7");
     await expect(page.getByLabel("MCP 주소", { exact: true })).toHaveValue(
       "https://mcp.context7.com/mcp",
     );
@@ -165,7 +181,13 @@ test("Memory permissions control existing gateway sessions and persist with reme
         connectorId,
       ),
     ).toContain("Desktop synthetic memory");
-    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
+    await page
+      .getByRole("navigation", { name: "열린 화면" })
+      .getByRole("button", { name: "설정", exact: true })
+      .click();
+    await page
+      .getByRole("tab", { name: "MCP 게이트웨이", exact: true })
+      .click();
     await page.getByRole("button", { name: "도구 확인", exact: true }).click();
     await expect(
       page.getByRole("checkbox", { name: /^read_graph\b/ }),

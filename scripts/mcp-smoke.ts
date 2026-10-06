@@ -28,14 +28,14 @@ try {
   await store.add({
     kind: "context7",
     name: "Context7",
-    webUrl: "https://context7.com/",
+    webUrl: null,
     endpoint: "https://mcp.context7.com/mcp",
     token: null,
   });
   await store.add({
     kind: "memory",
     name: "Memory",
-    webUrl: "https://github.com/modelcontextprotocol/servers/",
+    webUrl: null,
     endpoint: null,
     token: null,
   });

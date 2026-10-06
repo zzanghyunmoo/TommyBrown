@@ -52,8 +52,8 @@ test("settings retain drafts and sessions, share MCP policies and restore appear
     await expect(
       mcp.getByText("MCP 게이트웨이 · 실행 중", { exact: true }),
     ).toBeVisible();
-    await mcp.getByLabel("서비스", { exact: true }).selectOption("memory");
-    await mcp.getByLabel("연결 이름", { exact: true }).fill("Settings Memory");
+    await mcp.getByLabel("MCP 종류", { exact: true }).selectOption("memory");
+    await mcp.getByLabel("서버 이름", { exact: true }).fill("Settings Memory");
     await tabs.getByRole("tab", { name: "일반·색상", exact: true }).click();
     await general
       .getByLabel("일반 설정 테마", { exact: true })
@@ -75,10 +75,12 @@ test("settings retain drafts and sessions, share MCP policies and restore appear
     await tabs
       .getByRole("tab", { name: "MCP 게이트웨이", exact: true })
       .click();
-    await expect(mcp.getByLabel("연결 이름", { exact: true })).toHaveValue(
+    await expect(mcp.getByLabel("서버 이름", { exact: true })).toHaveValue(
       "Settings Memory",
     );
-    await mcp.getByRole("button", { name: "커넥터 추가", exact: true }).click();
+    await mcp
+      .getByRole("button", { name: "MCP 서버 추가", exact: true })
+      .click();
     const card = mcp.locator(".connector-card");
     await card.getByRole("button", { name: "도구 확인", exact: true }).click();
     await card.getByRole("button", { name: "전체 차단", exact: true }).click();
@@ -107,17 +109,12 @@ test("settings retain drafts and sessions, share MCP policies and restore appear
       "settings-pty-retained",
     );
     const sessions = await page.evaluate(() => window.terminal.list());
-    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
-    const workspaceCard = page.locator(".main-pane-page .connector-card");
-    await workspaceCard
-      .getByRole("button", { name: "도구 확인", exact: true })
-      .click();
+    await page.getByRole("tab", { name: "웹 앱", exact: true }).click();
     await expect(
-      workspaceCard.getByRole("checkbox", { name: /^read_graph\b/ }),
-    ).toBeChecked();
-    await expect(
-      workspaceCard.getByRole("checkbox", { name: /^delete_entities\b/ }),
-    ).not.toBeChecked();
+      page
+        .getByRole("region", { name: "웹 앱 설정" })
+        .getByRole("heading", { name: "Settings Memory" }),
+    ).toHaveCount(0);
     await page
       .getByRole("navigation", { name: "열린 화면" })
       .getByRole("button", { name: "설정", exact: true })
@@ -129,12 +126,6 @@ test("settings retain drafts and sessions, share MCP policies and restore appear
       .getByRole("navigation", { name: "열린 화면" })
       .getByRole("button", { name: "project", exact: true })
       .click();
-    await expect(
-      workspaceCard.getByRole("checkbox", { name: /^search_nodes\b/ }),
-    ).toBeChecked();
-    await expect(workspaceCard.getByRole("status")).toHaveText(
-      "저장된 권한 적용 중",
-    );
     await page.getByRole("tab", { name: "터미널", exact: true }).click();
     await expect(page.locator(".xterm-rows")).toContainText(
       "settings-pty-retained",

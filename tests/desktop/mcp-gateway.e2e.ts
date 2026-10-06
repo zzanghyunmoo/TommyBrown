@@ -27,20 +27,36 @@ test("shared gateway starts with the desktop, configures all shell CLIs, and rev
     }, project);
     const page = await desktopWindow(desktop);
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
-    await page.getByRole("tab", { name: "커넥터", exact: true }).click();
+    await page
+      .getByRole("navigation", { name: "열린 화면" })
+      .getByRole("button", { name: "설정", exact: true })
+      .click();
+    await page
+      .getByRole("tab", { name: "MCP 게이트웨이", exact: true })
+      .click();
     await expect(
       page.getByRole("status").filter({ hasText: "MCP 게이트웨이" }),
     ).toHaveText("MCP 게이트웨이 · 실행 중");
-    const added = await page.evaluate(() =>
-      window.connectors.add({
-        kind: "github",
-        name: "Shared fixture",
-        webUrl: "https://github.com/",
-        endpoint: "http://127.0.0.1:9/mcp",
-        token: "desktop-upstream-fixture",
-      }),
-    );
-    connectorId = added[0]?.id ?? "";
+    await page.getByLabel("MCP 종류", { exact: true }).selectOption("mcp");
+    await page.getByLabel("서버 이름", { exact: true }).fill("Shared fixture");
+    await page
+      .getByLabel("MCP 주소", { exact: true })
+      .fill("http://127.0.0.1:9/mcp");
+    await page
+      .getByLabel("Bearer 액세스 토큰", { exact: true })
+      .fill("desktop-upstream-fixture");
+    await page
+      .getByRole("button", { name: "MCP 서버 추가", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Shared fixture" }),
+    ).toBeVisible();
+    connectorId =
+      (await page.evaluate(() => window.connectors.list()))[0]?.id ?? "";
+    await page
+      .getByRole("navigation", { name: "열린 화면" })
+      .getByRole("button", { name: "project", exact: true })
+      .click();
     await page.getByRole("tab", { name: "터미널", exact: true }).click();
     await page.locator(".terminal-connectors summary").click();
     await page.getByLabel("Shared fixture", { exact: true }).check();

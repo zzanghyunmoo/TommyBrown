@@ -9,10 +9,13 @@ import {
   allowsTool,
   type ConnectorCheck,
   connectorCallSchema,
+  isMcpConnector,
+  isServiceConnector,
   mcpEndpoint,
 } from "../../shared/connectors";
 import { connectorFetch } from "./http";
 import type { MemoryConnector } from "./memory";
+import type { ServiceOAuth } from "./oauth";
 import type { ConnectorStore } from "./store";
 import { exactTransport } from "./transport";
 
@@ -20,6 +23,7 @@ export class ConnectorMcp {
   constructor(
     private readonly store: ConnectorStore,
     private readonly memory?: MemoryConnector,
+    private readonly oauth?: ServiceOAuth,
   ) {}
   async check(id: string): Promise<ConnectorCheck> {
     return this.withClient(id, async (client) => ({
@@ -109,6 +113,8 @@ export class ConnectorMcp {
     signal?: AbortSignal,
   ): Promise<T> {
     const connector = this.store.require(id);
+    if (!isMcpConnector(connector))
+      throw new Error("Web connectors do not provide MCP tools.");
     if (connector.kind === "memory") {
       if (!this.memory)
         throw new Error("Local Memory is unavailable in this runtime.");
@@ -121,15 +127,19 @@ export class ConnectorMcp {
     if (!connector.endpoint)
       throw new Error("Configure an MCP endpoint for data and tool access.");
     const endpoint = new URL(mcpEndpoint(connector.endpoint));
+    const token = isServiceConnector(connector)
+      ? ((await this.oauth?.accessToken(id)) ??
+        (() => {
+          throw new Error("Service authentication is unavailable.");
+        })())
+      : connector.token;
     const transport = new StreamableHTTPClientTransport(endpoint, {
       requestInit: {
-        headers: connector.token
-          ? { Authorization: `Bearer ${connector.token}` }
-          : {},
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         redirect: "error",
       },
-      fetch: (input, init) =>
-        connectorFetch(endpoint, input, {
+      fetch: async (input, init) => {
+        const response = await connectorFetch(endpoint, input, {
           ...init,
           ...(signal
             ? {
@@ -139,7 +149,11 @@ export class ConnectorMcp {
                 ]),
               }
             : {}),
-        }),
+        });
+        if (response.status === 401 && isServiceConnector(connector) && token)
+          await this.oauth?.rejected(id, token);
+        return response;
+      },
       reconnectionOptions: {
         maxRetries: 0,
         initialReconnectionDelay: 1000,
@@ -158,9 +172,7 @@ export class ConnectorMcp {
       const message =
         error instanceof Error ? error.message : "MCP connection failed.";
       throw new Error(
-        connector.token
-          ? message.replaceAll(connector.token, "[redacted]")
-          : message,
+        token ? message.replaceAll(token, "[redacted]") : message,
       );
     } finally {
       try {

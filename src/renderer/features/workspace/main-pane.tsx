@@ -97,7 +97,7 @@ export function MainPane({
           },
           {
             id: "connectors",
-            label: "커넥터",
+            label: "웹 앱",
             panel: "work-connectors",
             icon: <Link2Icon />,
           },
@@ -133,7 +133,7 @@ export function MainPane({
         ref={connectors}
         id="work-connectors"
         role="tabpanel"
-        aria-label="커넥터"
+        aria-label="웹 앱"
         className="main-pane-page"
         hidden={mode !== "connectors"}
       >

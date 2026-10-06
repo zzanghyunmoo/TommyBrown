@@ -7,9 +7,10 @@ import { useState } from "react";
 import { Notice, Panel } from "../../components/primitives";
 import { ThemeChoice } from "../../components/theme-choice";
 import { ModelAccess } from "../models/model-access";
-import { ConnectorPane } from "../workspace/connector-pane";
 import { ModeTabs } from "../workspace/mode-tabs";
 import { readViewState, saveViewState } from "../workspace/view-state";
+import { McpPane } from "./mcp-pane";
+import { ServiceConnectors } from "./service-connectors";
 
 const sections = [
   {
@@ -23,6 +24,12 @@ const sections = [
     label: "일반·색상",
     panel: "settings-general",
     icon: <MoonIcon />,
+  },
+  {
+    id: "connectors",
+    label: "커넥터",
+    panel: "settings-connectors",
+    icon: <Share2Icon />,
   },
   {
     id: "mcp",
@@ -41,6 +48,9 @@ export function SettingsPage({
 }) {
   const [section, setSection] = useState(() => readViewState().settingsSection);
   const [mcpOpened, setMcpOpened] = useState(() => section === "mcp");
+  const [connectorsOpened, setConnectorsOpened] = useState(
+    () => section === "connectors",
+  );
   const [error, setError] = useState<string>();
   const [appearanceError, setAppearanceError] = useState<string>();
   return (
@@ -52,6 +62,7 @@ export function SettingsPage({
         select={(next) => {
           setSection(next);
           if (next === "mcp") setMcpOpened(true);
+          if (next === "connectors") setConnectorsOpened(true);
           try {
             saveViewState({ settingsSection: next });
             setError(undefined);
@@ -112,12 +123,21 @@ export function SettingsPage({
       </div>
       <div
         className="settings-panel"
+        id="settings-connectors"
+        role="tabpanel"
+        aria-label="커넥터"
+        hidden={section !== "connectors"}
+      >
+        {connectorsOpened && <ServiceConnectors />}
+      </div>
+      <div
+        className="settings-panel"
         id="settings-mcp"
         role="tabpanel"
         aria-label="MCP 게이트웨이"
         hidden={section !== "mcp"}
       >
-        {mcpOpened && <ConnectorPane settings />}
+        {mcpOpened && <McpPane />}
       </div>
     </section>
   );

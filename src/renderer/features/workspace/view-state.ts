@@ -10,7 +10,9 @@ const viewSchema = z.object({
     .nullable()
     .default(null)
     .transform((page) => (page === "models" ? "settings" : page)),
-  settingsSection: z.enum(["proxy", "general", "mcp"]).default("proxy"),
+  settingsSection: z
+    .enum(["proxy", "general", "connectors", "mcp"])
+    .default("proxy"),
   pane: z.enum(["documents", "browser", "connectors"]).default("documents"),
   documents: z.array(fileRequestSchema).max(32).default([]),
   selectedDocument: z.string().nullable().default(null),

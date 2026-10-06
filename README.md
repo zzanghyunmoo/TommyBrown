@@ -84,18 +84,19 @@ Open **설정** from the header or sidebar, then choose a category:
 
 - **프록시·모델**: proxy lifecycle, account connections, model mappings and CLI defaults.
 - **일반·색상**: Bright/Dark colors for the app, terminal and editor, plus sidebar visibility.
-- **MCP 게이트웨이**: gateway status, connector registration, tool inspection and saved permissions.
+- **커넥터**: Slack and Atlassian account authorization, service tools and saved permissions.
+- **MCP 게이트웨이**: gateway status, Context7/Memory/custom MCP servers and their permissions.
 
-MCP settings work before opening a workspace. Connector changes also update the working
-pane and terminal selector. Switching settings retains unsaved inputs and live terminal
+Connector and MCP settings work before opening a workspace. Changes update the terminal
+tool selector. Switching settings retains unsaved inputs and live terminal
 sessions; the last category, theme and sidebar choice restore after restarting.
 The header theme selector remains available as a shortcut.
 See the [settings checkpoint](docs/verification/2026-10-06-settings-categories.md).
 
-## Workspace and connectors
+## Workspace, web apps and service connectors
 
 - Start with one working area and switch between Terminal, Code/Documents, and
-  Connectors tabs. Opening a browser, terminal link, app, or connector web screen
+  Web Apps tabs. Opening a browser, terminal link or web app
   automatically opens the right split. Browser and app are peer tabs there; closing
   that split restores the working area width while retaining web state. Drag dividers,
   explicitly split terminals, or zoom a pane. Apps are web screens, not arbitrary
@@ -105,13 +106,28 @@ See the [settings checkpoint](docs/verification/2026-10-06-settings-categories.m
 - Browse, edit, and save text in the Code/Documents tab. Markdown has an offline preview.
   External edits produce a conflict instead of overwriting your draft.
 - Click a terminal HTTP(S) link to open the right browser pane. Browser sessions have
-  no local IPC or Node privileges; each connector has its own persistent session.
+  no local IPC or Node privileges; each web app has its own persistent session.
 - Add browser, Slack/Discord, Jira/Linear, Confluence/Notion, or GitLab/GitHub web screens.
   Embedded login restrictions may require the external-browser button. External login
   does not transfer cookies into the embedded view.
-- For agent data and tools, configure a trusted Streamable HTTP MCP endpoint and an
-  optional bearer token. Web login is separate from MCP authentication. Inspect and
-  explicitly run tools in the connector pane, or select connections for a new CLI session.
+- For service tools, open **설정 > 커넥터**, add Slack or Atlassian, then click **계정 연결**.
+  Approve the account in the external browser, click **도구 확인**, choose allowed tools,
+  and save their permissions. New service connectors initially block every tool.
+  Atlassian registers its OAuth client automatically and requests access to your sites.
+  Slack requires a registered internal or approved Slack app: enter its Client ID and
+  Client Secret in the app and register `http://127.0.0.1:47931/oauth/callback` as its
+  OAuth redirect URL. Changing Slack app credentials requires removing and re-adding
+  that connector. The official [Slack MCP guide](https://docs.slack.dev/ai/slack-mcp-server/)
+  describes supported apps and scopes.
+- OAuth uses PKCE and a one-time callback state. Client registration, issuer-bound
+  tokens and expiry stay in the OS-encrypted store; the renderer never receives them.
+  Refresh is automatic when possible. Expired or revoked access asks you to reconnect;
+  tool calls never open a login browser or automatically repeat failed write operations.
+  Web-app cookies are independent of this service authorization.
+- For other agent tools, open **설정 > MCP 게이트웨이** and register a trusted Streamable
+  HTTP endpoint with an optional Bearer token. Inspect and explicitly run tools in
+  that server's card. Before starting a CLI, select its service connectors and MCP
+  servers under **이 세션의 도구 연결** in the terminal tab.
   The app starts a shared `tommybrown` MCP gateway automatically. Select connectors
   before opening Claude Code, Codex, Antigravity or PowerShell; the three CLI commands
   inside that PowerShell inherit the same selection. Global CLI configuration is unchanged.
@@ -119,9 +135,10 @@ See the [settings checkpoint](docs/verification/2026-10-06-settings-categories.m
   Claude Code and Codex have passed real MCP tool calls through the gateway. Antigravity
   1.2.17 discovers its tools, but its OpenAI model transport omits tool declarations and
   ignores tool-call responses. Actual tool invocation on that route remains blocked.
-  OAuth-only MCP servers require an issued token or a compatible local adapter.
+  OAuth-only custom servers other than the managed services require an issued token
+  or a compatible local adapter. Atlassian API tokens are not Bearer tokens.
   The shared gateway exposes tools; MCP resources and prompts are not aggregated.
-- Choose **Context7** in the connector form for the official documentation MCP
+- Choose **Context7** in the MCP server form for the official documentation MCP
   endpoint. Anonymous access works at the service's lower rate limit; an optional
   API key goes in the access-token field. Choose **Memory** for the bundled official
   memory server (`@modelcontextprotocol/server-memory` 2026.8.31). It stores a local
@@ -143,6 +160,10 @@ view settings, and connector definitions restore
 after restart. Save drafts before quitting. Running processes and terminal output do not
 resume after an application restart. Disconnecting a connector stops terminals using it
 and removes its local definition, stored token, and embedded browser session.
+Legacy mixed web/MCP registrations migrate into separate records. Web IDs and login
+partitions are preserved; Context7/Memory IDs and Memory data remain unchanged.
+See the [service connector checkpoint](docs/verification/2026-10-06-service-connectors.md)
+for authentication evidence and account-validation limits.
 Gateway access is revoked on terminal exit, launch failure or disconnection. Temporary
 MCP configuration files contain only a local session credential and are stored in the
 app's protected data directory. They are removed at exit or cleaned on the next startup;

@@ -3,6 +3,8 @@
 Date: 2026-10-06. Windows x64, Electron 44.5.1, feature branch `feat/settings-categories`.
 MCP work is merged in [PR #8](https://github.com/zzanghyunmoo/TommyBrown/pull/8).
 This checkpoint describes the subsequent settings change.
+The later [service connector checkpoint](2026-10-06-service-connectors.md) supersedes the
+three-category and shared workspace MCP editor layout described here.
 
 ## Observed behavior
 
