@@ -13,7 +13,7 @@ export const cliLabels: Record<Provider, string> = {
   claude: "Claude Code",
   antigravity: "Antigravity",
 };
-export const claudeShortcuts = ["opus", "sonnet", "haiku"] as const;
+export const claudeShortcuts = ["fable", "opus", "sonnet", "haiku"] as const;
 const mappingModel = modelIdSchema
   .refine(
     (model) => !model.toLowerCase().startsWith("tb-"),

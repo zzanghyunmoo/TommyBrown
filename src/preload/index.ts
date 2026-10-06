@@ -17,6 +17,9 @@ const appearance: AppearanceBridge = {
 contextBridge.exposeInMainWorld("appearance", appearance);
 
 const bridge: DesktopBridge = {
+  launchSettings: () => ipcRenderer.invoke("models:launch-settings"),
+  saveLaunchSelection: (selection) =>
+    ipcRenderer.invoke("models:save-launch-selection", selection),
   snapshot: () => ipcRenderer.invoke("models:snapshot"),
   install: () => ipcRenderer.invoke("models:install"),
   start: () => ipcRenderer.invoke("models:start"),

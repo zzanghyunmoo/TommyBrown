@@ -12,6 +12,7 @@ import {
   terminalResizeSchema,
 } from "../../shared/terminal";
 import type { WorkspaceStore } from "../workspace/store";
+import { powerShellProfile } from "./powershell";
 import { resolveCli } from "./resolve-cli";
 
 type Session = {
@@ -23,21 +24,23 @@ type Session = {
   closing?: Promise<void>;
 };
 
+type TerminalProfiles = {
+  readonly model: (request: LaunchRequest) => Promise<LaunchProfile>;
+  readonly shell?: () => Promise<LaunchProfile>;
+  readonly connectors?: (
+    cli: LaunchRequest["cli"],
+    ids: readonly string[],
+  ) => Pick<LaunchProfile, "args" | "environment">;
+};
+
 export class TerminalService {
   private readonly sessions = new Map<string, Session>();
   private launching = 0;
   private stopping = false;
   constructor(
     private readonly spaces: WorkspaceStore,
-    private readonly route: (request: LaunchRequest) => Promise<LaunchProfile>,
+    private readonly profiles: TerminalProfiles,
     private readonly emit: (event: TerminalEvent) => void,
-    private readonly connectorRoute: (
-      cli: LaunchRequest["cli"],
-      ids: readonly string[],
-    ) => Pick<LaunchProfile, "args" | "environment"> = () => ({
-      args: [],
-      environment: {},
-    }),
   ) {}
 
   async launch(input: unknown): Promise<TerminalInfo> {
@@ -56,10 +59,10 @@ export class TerminalService {
         throw new Error("This space's directory is unavailable.");
       const profile =
         request.cli === "powershell"
-          ? undefined
+          ? await (this.profiles.shell?.() ?? powerShellProfile())
           : request.model === null
             ? { executable: request.cli, args: [], environment: {} }
-            : await this.route({
+            : await this.profiles.model({
                 cli: request.cli,
                 model: request.model,
                 mappingRevision: request.mappingRevision,
@@ -67,7 +70,10 @@ export class TerminalService {
       const connectorProfile =
         request.cli === "powershell"
           ? { args: [], environment: {} }
-          : this.connectorRoute(request.cli, request.connectors);
+          : (this.profiles.connectors?.(request.cli, request.connectors) ?? {
+              args: [],
+              environment: {},
+            });
       const env: Record<string, string> = {};
       for (const [key, value] of Object.entries(process.env))
         if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE")
@@ -76,11 +82,27 @@ export class TerminalService {
         ...profile?.environment,
         ...connectorProfile.environment,
       })) {
+        for (const existing of Object.keys(env))
+          if (existing.toLowerCase() === key.toLowerCase())
+            delete env[existing];
         if (value === null) delete env[key];
         else env[key] = value;
       }
+      for (const key of Object.keys(env))
+        if (
+          ["no_color", "term", "colorterm", "force_color", "clicolor"].includes(
+            key.toLowerCase(),
+          )
+        )
+          delete env[key];
+      Object.assign(env, {
+        TERM: "xterm-256color",
+        COLORTERM: "truecolor",
+        FORCE_COLOR: "3",
+        CLICOLOR: "1",
+      });
       let executable = "powershell.exe";
-      let args = ["-NoLogo", "-NoProfile"];
+      let args = [...(profile?.args ?? ["-NoLogo", "-NoProfile"])];
       if (profile && request.cli !== "powershell") {
         const target = await resolveCli(request.cli);
         executable = target.executable;

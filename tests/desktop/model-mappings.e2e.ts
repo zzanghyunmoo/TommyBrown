@@ -27,9 +27,6 @@ test("edit, validate, route all six directions, and restore model mappings", asy
     const page = await desktopWindow(desktop);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page
-      .getByRole("button", { name: "게이트웨이 시작", exact: true })
-      .click();
     await expect(page.getByText("실행 중", { exact: true })).toBeVisible();
     const snapshot = await page.evaluate(() => window.desktop.snapshot());
     for (const provider of providers) {
@@ -159,9 +156,6 @@ test("edit, validate, route all six directions, and restore model mappings", asy
     await expect(
       page.getByLabel("Antigravity 실행 제공자", { exact: true }),
     ).toHaveValue("claude");
-    await page
-      .getByRole("button", { name: "게이트웨이 시작", exact: true })
-      .click();
     await expect(page.getByText("실행 중", { exact: true })).toBeVisible();
     const snapshot = await page.evaluate(() => window.desktop.snapshot());
     for (const provider of providers)

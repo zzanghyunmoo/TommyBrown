@@ -18,7 +18,10 @@ import { BrowserService } from "./browser/service";
 import { connectorProfile } from "./connectors/profiles";
 import { registerConnectors } from "./connectors/register";
 import { ModelService } from "./models";
+import { LaunchSettingsStore } from "./proxy/launch-settings";
+import { registerModels } from "./proxy/register";
 import { TerminalService } from "./terminal/service";
+import { shellProfile } from "./terminal/shell-profile";
 import { WorkbenchController } from "./workbench/controller";
 import { WorkspaceFiles } from "./workspace/files";
 import { WorkspaceStore } from "./workspace/store";
@@ -41,13 +44,19 @@ else
 
 async function boot(): Promise<void> {
   await app.whenReady();
-  const [appearance, models, spaces] = await Promise.all([
+  const [appearance, models, spaces, launchSettings] = await Promise.all([
     AppearanceStore.open(
       join(app.getPath("userData"), "appearance.json"),
       nativeTheme.shouldUseDarkColors ? "dark" : "light",
     ),
-    ModelService.create(app.getPath("userData")),
+    ModelService.create(
+      app.getPath("userData"),
+      process.env["TOMMYBROWN_TEST"] === "1" ? 0 : 8317,
+    ),
     WorkspaceStore.open(join(app.getPath("userData"), "workspace.json")),
+    LaunchSettingsStore.open(
+      join(app.getPath("userData"), "launch-settings.json"),
+    ),
   ]);
   nativeTheme.themeSource = appearance.get();
   const files = new WorkspaceFiles(spaces);
@@ -135,35 +144,21 @@ async function boot(): Promise<void> {
   });
   const terminals = new TerminalService(
     spaces,
-    (request) => models.launchProfile(request),
+    {
+      model: (request) => models.launchProfile(request),
+      connectors: (cli, ids) => connectorProfile(connectors, cli, ids),
+      shell: () => shellProfile(models, launchSettings.snapshot()),
+    },
     (event) => {
       if (!window.webContents.isDestroyed())
         window.webContents.send("terminal:event", event);
     },
-    (cli, ids) => connectorProfile(connectors, cli, ids),
   );
-  bind("models:snapshot", () => models.snapshot());
+  registerModels(models, launchSettings, bind);
   bind("workbench:enable", (input) =>
     workbench.enable(z.boolean().parse(input)),
   );
   bind("workbench:reset", () => workbench.reset());
-  bind("models:install", () => models.install());
-  bind("models:start", () =>
-    models.start(process.env["TOMMYBROWN_TEST"] === "1" ? 0 : 8317),
-  );
-  bind("models:stop", () => models.stop());
-  bind("models:login", (input) => models.login(input));
-  bind("models:login-status", (input) =>
-    models.loginStatus(z.string().min(1).parse(input)),
-  );
-  bind("models:cancel-login", (input) =>
-    models.cancelLogin(z.string().min(1).parse(input)),
-  );
-  bind("models:reopen-login", (input) =>
-    models.reopenLogin(z.string().min(1).parse(input)),
-  );
-  bind("models:copy-launch", (input) => models.copyLaunch(input));
-  bind("models:save-mappings", (input) => models.saveMappings(input));
   bind("workspace:snapshot", () => spaces.snapshot());
   bind("workspace:choose", async (input) => {
     const kind = z.enum(["workspace", "vault"]).parse(input);

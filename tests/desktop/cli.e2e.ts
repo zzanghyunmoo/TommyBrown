@@ -81,9 +81,6 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
     await expect(page.getByLabel("사용할 CLI", { exact: true })).toHaveValue(
       "antigravity",
     );
-    await page
-      .getByRole("button", { name: "게이트웨이 시작", exact: true })
-      .click();
     await expect(page.getByText("실행 중", { exact: true })).toBeVisible();
     const snapshot = await page.evaluate(() => window.desktop.snapshot());
     const models = { codex: "", claude: "", antigravity: "" };
@@ -170,6 +167,7 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
     });
     for (const cli of ["claude", "codex"] as const) {
       await page.getByLabel("CLI", { exact: true }).selectOption(cli);
+      await page.getByLabel("모델", { exact: true }).selectOption("");
       await page.getByRole("button", { name: "새 세션", exact: true }).click();
       await test.step(`${cli} produces terminal output`, async () => {
         await expect(page.locator(".xterm-rows")).toContainText(

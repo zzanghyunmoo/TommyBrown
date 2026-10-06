@@ -13,6 +13,7 @@ import { terminalLaunchSchema } from "../../../shared/terminal";
 import type { Space } from "../../../shared/workspace";
 import { Button, Notice } from "../../components/primitives";
 import { RoutePreview } from "../models/route-preview";
+import { useLaunchSelection } from "../models/use-launch-selection";
 import type { PaneHandle } from "./pane-handle";
 import { TerminalConnectors } from "./terminal-connectors";
 import { TerminalView } from "./terminal-view";
@@ -31,8 +32,8 @@ export function TerminalPanel({
 }) {
   const host = useRef<HTMLElement>(null);
   const [selected, setSelected] = useState<string>();
-  const [cli, setCli] = useState("powershell");
-  const [model, setModel] = useState("");
+  const selection = useLaunchSelection(true);
+  const { cli, model } = selection;
   const [connectors, setConnectors] = useState<readonly string[]>([]);
   const [modelSnapshot, setModelSnapshot] = useState<ModelSnapshot>();
   const provider = providerSchema.safeParse(cli);
@@ -77,6 +78,14 @@ export function TerminalPanel({
     if (session) {
       setSelected(session.id);
       requestAnimationFrame(focus);
+    }
+  }
+  async function refreshModels() {
+    try {
+      setModelSnapshot(await window.desktop.snapshot());
+      setModelError(undefined);
+    } catch (failure) {
+      if (failure instanceof Error) setModelError(failure.message);
     }
   }
   function selectTab(index: number) {
@@ -128,9 +137,10 @@ export function TerminalPanel({
           <select
             aria-label="CLI"
             value={cli}
+            disabled={selection.busy}
             onChange={(event) => {
-              setCli(event.target.value);
-              setModel("");
+              void selection.select(event.target.value);
+              void refreshModels();
             }}
           >
             <option value="powershell">PowerShell</option>
@@ -144,18 +154,13 @@ export function TerminalPanel({
           <select
             aria-label="모델"
             value={model}
-            disabled={cli === "powershell"}
-            onChange={(event) => setModel(event.target.value)}
+            disabled={cli === "powershell" || selection.busy}
+            onChange={(event) => {
+              void selection.select(cli, event.target.value);
+              void refreshModels();
+            }}
             onFocus={() => {
-              void window.desktop
-                .snapshot()
-                .then((snapshot) => {
-                  setModelSnapshot(snapshot);
-                  setModelError(undefined);
-                })
-                .catch((failure: unknown) => {
-                  if (failure instanceof Error) setModelError(failure.message);
-                });
+              void refreshModels();
             }}
           >
             <option value="">CLI 기존 설정</option>
@@ -171,6 +176,7 @@ export function TerminalPanel({
         </label>
         <Button
           busy={terminals.busy}
+          disabled={selection.busy}
           onClick={() => {
             void launch();
           }}
@@ -184,6 +190,7 @@ export function TerminalPanel({
       )}
       {terminals.error && <Notice error>{terminals.error}</Notice>}
       {modelError && <Notice error>{modelError}</Notice>}
+      {selection.error && <Notice error>{selection.error}</Notice>}
       {cli === "antigravity" ? (
         <p className="cli-note">Antigravity의 MCP 연결은 CLI에서 관리합니다.</p>
       ) : (
@@ -230,7 +237,10 @@ export function TerminalPanel({
         <div className="terminal-empty">
           <h2>이 공간에서 작업 시작</h2>
           <p>PowerShell 또는 코딩 CLI를 선택하고 새 세션을 여세요.</p>
-          <p>연결된 모델을 선택하면 해당 세션에만 모델 라우팅이 적용됩니다.</p>
+          <p>
+            CLI별 모델 선택은 저장되며, 새 PowerShell에도 저장한 연결을
+            적용합니다.
+          </p>
         </div>
       )}
     </section>

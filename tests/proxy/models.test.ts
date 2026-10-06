@@ -8,6 +8,7 @@ import {
   modelAlias,
 } from "../../src/main/proxy/model-mappings";
 import { emptyMappings, providers } from "../../src/shared/model-mappings";
+import { GatewayError } from "../../src/shared/proxy";
 
 const mocks = vi.hoisted(() => ({
   openExternal: vi.fn().mockResolvedValue(undefined),
@@ -20,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   accountModels: vi.fn().mockResolvedValue([]),
   setModelAliases: vi.fn().mockResolvedValue(undefined),
   phase: "running",
+  installed: true,
+  start: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("electron", () => ({
@@ -37,7 +40,7 @@ vi.mock("../../src/main/proxy/installer", () => ({
   ProxyInstaller: class {
     executable = "fixture.exe";
     async isInstalled() {
-      return true;
+      return mocks.installed;
     }
   },
 }));
@@ -49,6 +52,10 @@ vi.mock("../../src/main/proxy/runtime", () => ({
     client() {
       return mocks;
     }
+    async start(port: number, aliases: unknown) {
+      await mocks.start(port, aliases);
+      mocks.phase = "running";
+    }
     async stop() {
       mocks.phase = "stopped";
     }
@@ -56,6 +63,43 @@ vi.mock("../../src/main/proxy/runtime", () => ({
 }));
 
 import { ModelService } from "../../src/main/models";
+
+describe("gateway startup", () => {
+  it("leaves an uninstalled engine stopped without downloading on startup", async () => {
+    mocks.installed = false;
+    mocks.phase = "stopped";
+    mocks.start.mockClear();
+    try {
+      const service = await ModelService.create("fixture");
+      expect((await service.snapshot()).installed).toBe(false);
+      expect(mocks.start).not.toHaveBeenCalled();
+    } finally {
+      mocks.installed = true;
+    }
+  });
+  it("keeps the application available after a startup failure and allows retry", async () => {
+    mocks.phase = "stopped";
+    mocks.start.mockRejectedValueOnce(
+      new GatewayError("runtime", "fixture port occupied"),
+    );
+    const service = await ModelService.create("fixture");
+    expect((await service.snapshot()).loginError).toBe("fixture port occupied");
+    await service.start(0);
+    expect((await service.snapshot()).loginError).toBeNull();
+    expect(mocks.phase).toBe("running");
+  });
+  it("starts an installed gateway when the application model service opens", async () => {
+    mocks.phase = "stopped";
+    mocks.start.mockClear();
+    await ModelService.create("fixture");
+    expect(mocks.start).toHaveBeenCalledWith(8317, {
+      codex: [],
+      claude: [],
+      antigravity: [],
+    });
+    expect(mocks.phase).toBe("running");
+  });
+});
 
 const directories: string[] = [];
 afterEach(async () => {
@@ -260,16 +304,18 @@ describe("mapped model launches", () => {
   it("gives Claude each configured tier its own target model", async () => {
     const { service, settings } = await fixture();
     settings.routes.claude = "codex";
-    settings.rows = (["opus", "sonnet", "haiku"] as const).map((shortcut) => ({
-      id: randomUUID(),
-      name: shortcut,
-      claudeShortcut: shortcut,
-      models: {
-        claude: `claude-${shortcut}`,
-        codex: `gpt-${shortcut}`,
-        antigravity: null,
-      },
-    }));
+    settings.rows = (["fable", "opus", "sonnet", "haiku"] as const).map(
+      (shortcut) => ({
+        id: randomUUID(),
+        name: shortcut,
+        claudeShortcut: shortcut,
+        models: {
+          claude: `claude-${shortcut}`,
+          codex: `gpt-${shortcut}`,
+          antigravity: null,
+        },
+      }),
+    );
     mocks.accounts.mockResolvedValue([
       { name: "codex.json", provider: "codex", disabled: false },
     ]);
@@ -282,15 +328,16 @@ describe("mapped model launches", () => {
     await service.saveMappings(settings);
     const profile = await service.launchProfile({
       cli: "claude",
-      model: "opus",
+      model: "fable",
     });
-    for (const shortcut of ["opus", "sonnet", "haiku"])
+    for (const shortcut of ["fable", "opus", "sonnet", "haiku"])
       expect(
         profile.environment[
           `ANTHROPIC_DEFAULT_${shortcut.toUpperCase()}_MODEL`
         ],
       ).toBe(modelAlias("codex", `gpt-${shortcut}`));
-    expect(profile.args).toContain(modelAlias("codex", "gpt-opus"));
+    expect(profile.args).toEqual(["--model", "fable"]);
+    expect(profile.environment["ANTHROPIC_MODEL"]).toBe("fable");
   });
   it("rejects a configured Claude shortcut with a missing target", async () => {
     const { service, settings } = await fixture();

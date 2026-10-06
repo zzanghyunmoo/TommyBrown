@@ -68,9 +68,7 @@ test("install, start, stop, and restore the real native model gateway", async ()
   const reopened = await electron.launch(options);
   try {
     const page = await desktopWindow(reopened);
-    await expect(
-      page.getByRole("button", { name: "게이트웨이 시작", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText("실행 중", { exact: true })).toBeVisible();
     expect(
       createHash("sha256")
         .update(await readFile(resolve(directory, "gateway-keys.encrypted")))
