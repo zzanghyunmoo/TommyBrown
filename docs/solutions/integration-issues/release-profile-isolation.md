@@ -47,6 +47,14 @@ their spaces and authorize accounts in the new release profile once.
   selection. Cover default selection with existing development state as well as
   ordinary isolated release smoke tests.
 
+[Native CI run 37469781858](https://github.com/zzanghyunmoo/TommyBrown/actions/runs/37469781858)
+passed on Windows x64, macOS arm64 and macOS x64 at commit
+e0e013db5cd5b2ad911afc4f75611d8fb207517b. All three archives passed package-content,
+CPU/permission (Mac) and checksum inspection. The six uploaded files matched
+GitHub's asset digests. Anonymous requests returned valid ZIP headers with HTTP
+206 and exact checksum contents with HTTP 200. The source tag is fixed to that
+tested commit in [release v0.1.1](https://github.com/zzanghyunmoo/TommyBrown/releases/tag/v0.1.1).
+
 Sequential main-agent review covered correctness, persistence, browser storage,
 override precedence, test sensitivity and scope. No independent agent review is
 claimed. The small startup helper did not need further abstraction or cleanup.
