@@ -11,14 +11,15 @@ Download the matching archive from [GitHub Releases](https://github.com/zzanghyu
 
 | Computer | Archive |
 | --- | --- |
-| Windows x64 | `TommyBrown-0.1.1-windows-x64.zip` |
-| Mac with Apple Silicon | `TommyBrown-0.1.1-macos-arm64.zip` |
-| Mac with Intel | `TommyBrown-0.1.1-macos-x64.zip` |
+| Windows x64 | `TommyBrown-0.1.2-windows-x64.zip` |
+| Mac with Apple Silicon | `TommyBrown-0.1.2-macos-arm64.zip` |
+| Mac with Intel | `TommyBrown-0.1.2-macos-x64.zip` |
 
 On Windows, extract the entire ZIP and run `TommyBrown.exe`, keeping the other
 files beside it. On macOS, extract and drag `TommyBrown.app` to Applications.
-The app includes Electron and the Memory server. Install coding CLIs separately;
-the managed model proxy downloads from settings on first use.
+The app includes Electron and the Memory server. Install missing coding CLIs in
+**설정 > 일반·색상 > 코딩 에이전트** or the terminal panel. The managed model proxy
+downloads from settings on first use.
 
 These builds have no publisher certificate or Apple notarization. Windows may
 show SmartScreen; macOS may require **System Settings > Privacy & Security >
@@ -56,9 +57,10 @@ In Model access, install the engine, start the gateway, and connect an account i
 your browser. On subsequent app launches, the installed gateway starts automatically
 with the saved accounts and mappings. Open a workspace, choose Claude Code, Codex, or
 Antigravity and a discovered model, then start a terminal session. CLI and model choices
-are saved separately for each CLI. Install the chosen
-CLI separately using its native installer or standard npm package; npm installations
-also need Node.js on PATH. Custom shell wrappers are not supported.
+are saved separately for each CLI. Install missing CLIs in
+**설정 > 일반·색상 > 코딩 에이전트**. A missing CLI also offers an install button in
+the terminal panel. Existing native and standard npm installations remain usable;
+npm installations need Node.js on PATH. Custom shell wrappers are not supported.
 Antigravity uses the native `agy` executable. Its selected model uses the gateway's
 OpenAI-compatible endpoint without changing global CLI settings.
 
@@ -120,7 +122,7 @@ by CLIProxyAPI and are not encrypted by TommyBrown itself.
 Open **설정** from the header or sidebar, then choose a category:
 
 - **프록시·모델**: proxy lifecycle, account connections, model mappings and CLI defaults.
-- **일반·색상**: Bright/Dark colors for the app, terminal and editor, plus sidebar visibility.
+- **일반·색상**: Bright/Dark colors, sidebar visibility, and coding-agent installation.
 - **커넥터**: Slack and Atlassian account authorization, service tools and saved permissions.
 - **MCP 게이트웨이**: gateway status, Context7/Memory/custom MCP servers and their permissions.
 
@@ -129,6 +131,18 @@ tool selector. Switching settings retains unsaved inputs and live terminal
 sessions; the last category, theme and sidebar choice restore after restarting.
 The header theme selector remains available as a shortcut.
 See the [settings checkpoint](docs/verification/2026-10-06-settings-categories.md).
+
+Coding-agent installation is opt-in and uses the official native installers for
+[Codex](https://learn.chatgpt.com/docs/codex/cli),
+[Claude Code](https://code.claude.com/docs/en/setup), and
+[Antigravity](https://www.antigravity.google/docs/cli/install/).
+No Node.js or package manager is needed for these native installations. The vendor
+installer may update the current user's PATH or shell integration. TommyBrown shows
+progress and bounded logs, supports cancellation and retry, and verifies the installed
+command with `--version`. Open a new terminal session afterward; restarting the app is
+unnecessary. Existing sessions keep their original environment. **설치 다시 확인**
+rescans externally installed CLIs. Installation does not connect accounts or change
+saved model mappings. In-app installation is available from version 0.1.2.
 
 ## Workspace, web apps and service connectors
 

@@ -26,6 +26,7 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
   await mkdir(bin);
   const fixtureSource = [
     "#!/usr/bin/env node",
+    'if (process.argv.includes("--version")) { console.log("CLI fixture 1.0.0"); process.exit(0); }',
     'const fs = require("node:fs");',
     "const tokens = Object.entries(process.env).filter(([key]) => /^TOMMYBROWN_.*_TOKEN$/.test(key));",
     "fs.writeFileSync(process.env.TOMMYBROWN_CAPTURE, JSON.stringify({args: process.argv.slice(2), tokens: Object.fromEntries(tokens), electronFlag: process.env.ELECTRON_RUN_AS_NODE ?? null, opus: process.env.ANTHROPIC_DEFAULT_OPUS_MODEL ?? null, agyModel: process.env.AGY_LLM_GATEWAY_MODELS ?? null}));",
@@ -151,15 +152,25 @@ test("coding CLI shims receive exact MCP arguments and per-session credentials",
     const [connector] = await page.evaluate(
       (url) =>
         window.connectors.add({
-          kind: "github",
+          kind: "mcp",
           name: "CLI fixture",
-          webUrl: "https://github.com/",
+          webUrl: null,
           endpoint: url,
           token: "fixture-token",
         }),
       endpoint,
     );
     if (!connector) throw new Error("No connector");
+    await page
+      .getByRole("navigation", { name: "열린 화면" })
+      .getByRole("button", { name: "설정", exact: true })
+      .click();
+    await page
+      .getByRole("tab", { name: "MCP 게이트웨이", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "CLI fixture", exact: true }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "공간 열기", exact: true }).click();
     await page.getByLabel("CLI", { exact: true }).selectOption("claude");
     await page.locator(".terminal-connectors summary").click();

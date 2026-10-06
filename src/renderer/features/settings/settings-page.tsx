@@ -6,6 +6,7 @@ import {
 import { useState } from "react";
 import { Notice, Panel } from "../../components/primitives";
 import { ThemeChoice } from "../../components/theme-choice";
+import { AgentSettings } from "../agents/agent-installation";
 import { ModelAccess } from "../models/model-access";
 import { ModeTabs } from "../workspace/mode-tabs";
 import { readViewState, saveViewState } from "../workspace/view-state";
@@ -93,7 +94,9 @@ export function SettingsPage({
             <div>
               <span className="eyebrow">설정</span>
               <h1>일반·색상</h1>
-              <p>화면과 터미널의 색상, 탐색 메뉴 표시를 설정합니다.</p>
+              <p>
+                화면 색상과 탐색 메뉴를 설정하고 코딩 에이전트를 설치합니다.
+              </p>
             </div>
           </header>
           {appearanceError && <Notice error>{appearanceError}</Notice>}
@@ -119,6 +122,7 @@ export function SettingsPage({
               />
             </label>
           </Panel>
+          <AgentSettings />
         </div>
       </div>
       <div

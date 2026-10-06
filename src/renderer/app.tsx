@@ -228,7 +228,7 @@ export function App() {
           )}
         </div>
         <footer className="statusbar">
-          <span>TommyBrown 0.1.1</span>
+          <span>TommyBrown 0.1.2</span>
           <span>
             {
               terminals.sessions.filter(

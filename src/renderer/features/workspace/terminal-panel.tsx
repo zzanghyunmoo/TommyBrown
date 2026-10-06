@@ -16,6 +16,8 @@ import { providerSchema } from "../../../shared/proxy";
 import { terminalLaunchSchema } from "../../../shared/terminal";
 import type { Space } from "../../../shared/workspace";
 import { Button, Notice } from "../../components/primitives";
+import { AgentInstallation } from "../agents/agent-installation";
+import { useAgents } from "../agents/use-agents";
 import { RoutePreview } from "../models/route-preview";
 import { useLaunchSelection } from "../models/use-launch-selection";
 import type { PaneHandle } from "./pane-handle";
@@ -38,6 +40,9 @@ export function TerminalPanel({
   const [selected, setSelected] = useState<string>();
   const selection = useLaunchSelection(true);
   const { cli, model } = selection;
+  const agents = useAgents();
+  const agent = agents.states.find((state) => state.id === cli);
+  const cannotLaunch = cli !== "powershell" && agent?.phase !== "installed";
   const [connectors, setConnectors] = useState<readonly string[]>([]);
   const [modelSnapshot, setModelSnapshot] = useState<ModelSnapshot>();
   const provider = providerSchema.safeParse(cli);
@@ -69,6 +74,7 @@ export function TerminalPanel({
       ?.focus();
   }
   async function launch() {
+    if (cannotLaunch) return;
     const session = await terminals.launch(
       terminalLaunchSchema.parse({
         spaceId: space.id,
@@ -181,7 +187,7 @@ export function TerminalPanel({
         </label>
         <Button
           busy={terminals.busy}
-          disabled={selection.busy}
+          disabled={selection.busy || cannotLaunch}
           onClick={() => {
             void launch();
           }}
@@ -190,6 +196,15 @@ export function TerminalPanel({
           <PlusIcon />
         </Button>
       </div>
+      {agent && agent.phase !== "installed" && (
+        <AgentInstallation
+          compact
+          state={agent}
+          busy={agents.states.some((state) => state.phase === "installing")}
+          act={agents.act}
+        />
+      )}
+      {agents.error && <Notice error>{agents.error}</Notice>}
       {provider.success && (
         <RoutePreview settings={mappings} cli={provider.data} model={model} />
       )}

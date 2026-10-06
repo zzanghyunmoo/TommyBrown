@@ -14,6 +14,7 @@ import { z } from "zod";
 import { themeCanvas } from "../shared/appearance";
 import { browserGroupSchema } from "../shared/browser";
 import { isMcpConnector } from "../shared/connectors";
+import { AgentService } from "./agents/service";
 import { AppearanceStore } from "./appearance";
 import { BrowserService } from "./browser/service";
 import { McpGateway } from "./connectors/gateway";
@@ -63,6 +64,7 @@ async function boot(): Promise<void> {
   ]);
   nativeTheme.themeSource = appearance.get();
   const files = new WorkspaceFiles(spaces);
+  const agents = new AgentService();
   const vaults = new VaultService(spaces, files, (url) =>
     shell.openExternal(url),
   );
@@ -166,6 +168,10 @@ async function boot(): Promise<void> {
     },
   );
   registerModels(models, launchSettings, bind);
+  bind("agents:snapshot", () => agents.snapshot());
+  bind("agents:refresh", () => agents.refresh());
+  bind("agents:install", (input) => agents.start(input));
+  bind("agents:cancel", (input) => agents.cancel(input));
   bind("workbench:enable", (input) =>
     workbench.enable(z.boolean().parse(input)),
   );
@@ -250,6 +256,7 @@ async function boot(): Promise<void> {
           });
           if (answer.response !== 1) return;
         }
+        await agents.stop();
         await connectors.oauth.stop();
         await terminals.stop();
         await mcpGateway.stop();

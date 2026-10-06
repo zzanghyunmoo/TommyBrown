@@ -5,6 +5,11 @@ on:
     branches: [feat/desktop-releases]
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      test_agent_installers:
+        description: Verify official CLI installation in disposable native homes
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,7 +32,7 @@ jobs:
           - name: macos-x64
             runner: macos-15-intel
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -41,9 +46,12 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun run lint
-      - run: bun run test
+      - run: bun run test --maxWorkers=2
       - run: bun run package:desktop
       - run: bun run test:release
+      - run: node scripts/test-agent-installation.ts
+        env:
+          TOMMYBROWN_LIVE_AGENT_INSTALL: ${{ inputs.test_agent_installers && '1' || '0' }}
       - run: bun run archive:release
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

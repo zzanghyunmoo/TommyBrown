@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { AgentBridge } from "../shared/agents";
 import type { AppearanceBridge } from "../shared/appearance";
 import type { DesktopBridge } from "../shared/bridge";
 import type { BrowserBridge } from "../shared/browser";
@@ -9,6 +10,14 @@ import {
   workbenchEventSchema,
 } from "../shared/workbench";
 import type { WorkspaceBridge } from "../shared/workspace";
+
+const agents: AgentBridge = {
+  snapshot: () => ipcRenderer.invoke("agents:snapshot"),
+  refresh: () => ipcRenderer.invoke("agents:refresh"),
+  install: (id) => ipcRenderer.invoke("agents:install", id),
+  cancel: (id) => ipcRenderer.invoke("agents:cancel", id),
+};
+contextBridge.exposeInMainWorld("agents", agents);
 
 const appearance: AppearanceBridge = {
   get: () => ipcRenderer.invoke("appearance:get"),
