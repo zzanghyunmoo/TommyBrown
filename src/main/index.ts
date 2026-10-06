@@ -137,7 +137,7 @@ async function boot(): Promise<void> {
     bind,
     (id) => terminals.disconnectConnector(id),
   );
-  const mcpGateway = new McpGateway(connectors);
+  const mcpGateway = new McpGateway(connectors.store, connectors.mcp);
   await mcpGateway.start();
   const connectorProfiles = await ConnectorProfiles.open(
     app.getPath("userData"),
@@ -203,7 +203,7 @@ async function boot(): Promise<void> {
         group: browserGroupSchema.default("browser"),
       })
       .parse(input);
-    if (request.connectorId) connectors.require(request.connectorId);
+    if (request.connectorId) connectors.store.require(request.connectorId);
     return browser.open(request.url, request.connectorId, request.group);
   });
   bind("browser:navigate", (input) => browser.navigate(input));

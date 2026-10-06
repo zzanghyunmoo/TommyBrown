@@ -63,6 +63,44 @@
 .connector-address {
   overflow-wrap: anywhere;
 }
+.connector-permissions {
+  display: grid;
+  gap: var(--s3);
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--s3);
+  font-size: var(--text-xs);
+}
+.connector-permission-list {
+  display: grid;
+  gap: var(--s2);
+  max-height: 360px;
+  overflow: auto;
+}
+.connector-pane .connector-tool-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  padding: var(--s2);
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+}
+.connector-tool-option input[type="checkbox"] {
+  width: auto;
+  flex: 0 0 auto;
+  margin-top: var(--s1);
+}
+.connector-pane .connector-tool-option > span {
+  display: grid;
+  gap: var(--s1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.connector-pane .connector-tool-option span > span {
+  color: var(--muted);
+  line-height: 1.5;
+}
 .connector-pane pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;

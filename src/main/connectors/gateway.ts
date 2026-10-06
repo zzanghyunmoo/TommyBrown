@@ -12,7 +12,7 @@ import {
   ListToolsRequestSchema,
   type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { McpGatewayStatus } from "../../shared/connectors";
+import { isMcpConnector, type McpGatewayStatus } from "../../shared/connectors";
 import { ConnectorMcp } from "./mcp";
 import type { ConnectorStore } from "./store";
 
@@ -41,8 +41,11 @@ export class McpGateway {
   });
   private port: number | null = null;
 
-  constructor(private readonly store: ConnectorStore) {
-    this.mcp = new ConnectorMcp(store);
+  constructor(
+    private readonly store: ConnectorStore,
+    mcp?: ConnectorMcp,
+  ) {
+    this.mcp = mcp ?? new ConnectorMcp(store);
     this.server.requestTimeout = 35000;
     this.server.headersTimeout = 10000;
     this.server.maxHeadersCount = 40;
@@ -73,7 +76,7 @@ export class McpGateway {
     const selected = [...new Set(ids)];
     for (const id of selected) {
       const connector = this.store.require(id);
-      if (!connector.endpoint)
+      if (!isMcpConnector(connector))
         throw new Error(`${connector.name} has no MCP endpoint.`);
     }
     const token = randomBytes(32).toString("base64url");
