@@ -137,3 +137,12 @@ export function launchModels(
     row.models[cli] ? [row.models[cli]] : [],
   );
 }
+
+export function launchModelLabel(
+  settings: ModelMappings,
+  cli: Provider,
+  model: string,
+) {
+  const row = mappingFor(settings, cli, model);
+  return row ? `${row.name} · ${model}` : model;
+}

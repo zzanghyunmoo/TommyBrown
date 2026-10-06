@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   claudeShortcuts,
-  cliLabels,
   type ModelMapping,
   type ModelMappings,
   modelMappingsSchema,
@@ -9,8 +8,9 @@ import {
   providerLabels,
   providers,
 } from "../../../shared/model-mappings";
-import { providerSchema } from "../../../shared/proxy";
+import { addPurposeMappings } from "../../../shared/model-presets";
 import { Button, Notice, Panel } from "../../components/primitives";
+import { MappingRoutes } from "./mapping-routes";
 
 export function MappingEditor({
   saved,
@@ -33,50 +33,10 @@ export function MappingEditor({
     }));
     setError(undefined);
   }
-  function addExamples() {
-    const pairs = [
-      {
-        name: "Astra · Fable",
-        codex: "astra",
-        claude: "fable",
-        claudeShortcut: "fable",
-      },
-      {
-        name: "Terra · Opus",
-        codex: "terra",
-        claude: "opus",
-        claudeShortcut: "opus",
-      },
-      {
-        name: "Sonar · Sonnet",
-        codex: "sonar",
-        claude: "sonnet",
-        claudeShortcut: "sonnet",
-      },
-      {
-        name: "Lunar · Haiku",
-        codex: "lunar",
-        claude: "haiku",
-        claudeShortcut: "haiku",
-      },
-    ] as const;
-    setDraft((current) => ({
-      ...current,
-      rows: [
-        ...current.rows,
-        ...pairs.map((pair) => ({
-          id: crypto.randomUUID(),
-          name: pair.name,
-          claudeShortcut: pair.claudeShortcut,
-          models: { codex: pair.codex, claude: pair.claude, antigravity: null },
-        })),
-      ],
-    }));
-  }
   return (
     <Panel
       title="모델 매핑"
-      description="같은 행의 모델을 서로 연결하고, CLI마다 실행 제공자를 선택하세요."
+      description="심층 추론, 복잡한 코딩, 일반 코딩, 빠른 작업에 맞춰 모델을 연결하세요."
       action={<span className="count">{dirty ? "저장 전" : "저장됨"}</span>}
     >
       <fieldset
@@ -84,33 +44,10 @@ export function MappingEditor({
         aria-label="모델 매핑 편집"
         disabled={busy}
       >
-        <div className="mapping-routes">
-          {providers.map((cli) => (
-            <label className="field" key={cli}>
-              {cliLabels[cli]} 실행 제공자
-              <select
-                aria-label={`${cliLabels[cli]} 실행 제공자`}
-                value={draft.routes[cli] ?? ""}
-                onChange={(event) => {
-                  const provider = event.target.value
-                    ? providerSchema.parse(event.target.value)
-                    : null;
-                  setDraft((current) => ({
-                    ...current,
-                    routes: { ...current.routes, [cli]: provider },
-                  }));
-                }}
-              >
-                <option value="">모델 직접 선택</option>
-                {providers.map((provider) => (
-                  <option key={provider} value={provider}>
-                    {providerLabels[provider]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
-        </div>
+        <MappingRoutes
+          routes={draft.routes}
+          onChange={(routes) => setDraft((current) => ({ ...current, routes }))}
+        />
         <p className="mapping-help">
           모델 ID는 계정의 목록에서 선택하거나 입력하세요. 실행 제공자의 모델은
           연결된 계정에서 사용할 수 있어야 합니다.
@@ -129,7 +66,7 @@ export function MappingEditor({
             <table className="mapping-table">
               <thead>
                 <tr>
-                  <th scope="col">연결 이름</th>
+                  <th scope="col">용도 / 연결 이름</th>
                   {providers.map((provider) => (
                     <th scope="col" key={provider}>
                       {providerLabels[provider]}
@@ -173,6 +110,12 @@ export function MappingEditor({
                             }))
                           }
                         />
+                        {row.models[provider] &&
+                          !catalog[provider].includes(row.models[provider]) && (
+                            <small className="mapping-help">
+                              요청 별칭 · 이 계정에서 실행 불가
+                            </small>
+                          )}
                         {provider === "claude" && (
                           <select
                             aria-label={`Claude 단축 이름 ${index + 1}`}
@@ -222,7 +165,8 @@ export function MappingEditor({
           </div>
         ) : (
           <div className="mapping-empty">
-            아직 연결한 모델이 없습니다. 예시를 추가하거나 새 행을 만드세요.
+            아직 연결한 모델이 없습니다. 용도별 기본 매핑을 추가하거나 새 행을
+            만드세요.
           </div>
         )}
         <div className="mapping-actions">
@@ -245,9 +189,14 @@ export function MappingEditor({
           >
             매핑 추가
           </Button>
-          {!draft.rows.length && (
-            <Button onClick={addExamples}>예시 4행 추가</Button>
-          )}
+          <Button
+            onClick={() => {
+              setDraft((current) => addPurposeMappings(current, catalog));
+              setError(undefined);
+            }}
+          >
+            용도별 기본 매핑
+          </Button>
           <div className="mapping-save">
             <Button
               disabled={!dirty}
@@ -281,9 +230,12 @@ export function MappingEditor({
         </div>
         {error && <Notice error>{error}</Notice>}
         <p className="mapping-help">
-          예시 이름은 실제 모델 ID로 바꿔 주세요. 연결하지 않은 Claude 단축
-          이름은 선택한 세션 모델을 사용합니다. 저장 후 실행 중인 CLI는 새
-          세션으로 열어 주세요.
+          기본 매핑은 용도 제안이며 성능이 같다는 뜻은 아닙니다. Gemini는 Pro
+          High / Pro / Flash / Flash-Lite 순으로 연결합니다. 계정에 없는 이름은
+          다른 제공자로 보내는 요청 별칭이며 실제 실행에는 계정 목록의 모델 ID가
+          필요합니다. Flash-Lite는 Antigravity 계정에서 제공되지 않을 수
+          있습니다. 기존 설정은 유지하며 빈 칸과 없는 용도만 채웁니다. 저장 후
+          실행 중인 CLI는 새 세션으로 열어 주세요.
         </p>
       </fieldset>
     </Panel>

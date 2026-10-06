@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { TerminalEvent, TerminalInfo } from "../../../shared/terminal";
 import { Notice } from "../../components/primitives";
 import { subscribeTheme, themeColor } from "../../theme";
+import { terminalClipboard } from "./terminal-clipboard";
 
 function terminalTheme(): ITheme {
   return {
@@ -71,6 +72,11 @@ export function TerminalView({
     const report = (failure: unknown) => {
       if (active && failure instanceof Error) setError(failure.message);
     };
+    const disposeClipboard = terminalClipboard(
+      terminal,
+      window.terminal,
+      report,
+    );
     function consume(event: TerminalEvent) {
       if (event.type === "data" && event.sequence > sequence) {
         sequence = event.sequence;
@@ -122,6 +128,7 @@ export function TerminalView({
     observer.observe(host.current);
     return () => {
       active = false;
+      disposeClipboard();
       observer.disconnect();
       unsubscribeTheme();
       unsubscribe();
@@ -133,7 +140,11 @@ export function TerminalView({
   return (
     <div className="terminal-view">
       {error && <Notice error>{error}</Notice>}
-      <div ref={host} className="terminal-surface" />
+      <div
+        ref={host}
+        className="terminal-surface"
+        title="선택 복사 Ctrl+Shift+C · 붙여넣기 Ctrl+Shift+V · 명령 중단 Ctrl+C"
+      />
     </div>
   );
 }

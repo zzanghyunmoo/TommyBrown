@@ -7,7 +7,11 @@ import {
   useState,
 } from "react";
 import type { ModelSnapshot } from "../../../shared/bridge";
-import { emptyMappings, launchModels } from "../../../shared/model-mappings";
+import {
+  emptyMappings,
+  launchModelLabel,
+  launchModels,
+} from "../../../shared/model-mappings";
 import { providerSchema } from "../../../shared/proxy";
 import { terminalLaunchSchema } from "../../../shared/terminal";
 import type { Space } from "../../../shared/workspace";
@@ -169,7 +173,9 @@ export function TerminalPanel({
             )}
             {choices.map((candidate) => (
               <option key={candidate} value={candidate}>
-                {candidate}
+                {provider.success
+                  ? launchModelLabel(mappings, provider.data, candidate)
+                  : candidate}
               </option>
             ))}
           </select>

@@ -31,6 +31,9 @@ Windows installation directory when the app inherited an older PATH. Choose **CL
 settings** to clear that CLI's saved routing. Reopen a session after changing its settings.
 PowerShell has a colored prompt and PSReadLine syntax highlighting when available.
 All terminal processes receive 256-color/truecolor capabilities, with light and dark ANSI palettes.
+Select terminal text and press **Ctrl+Shift+C** to copy; **Ctrl+Shift+V** pastes the
+Windows clipboard without adding Enter. Ordinary **Ctrl+C** still interrupts commands.
+Multiline paste preserves the terminal application's bracketed-paste handling.
 
 The model-access page can also copy an opt-in PowerShell command for an external
 terminal. That command contains a local gateway key and restores the previous
@@ -39,14 +42,35 @@ process environment when the CLI exits.
 In **Model mappings**, connect corresponding OpenAI, Claude, and Antigravity model
 IDs in a row, then choose the execution provider for each CLI. The model selector
 uses that CLI's source column and previews the target provider and model before
-launch. Both directions between every provider pair are supported. Example rows
-are editable shorthand; replace execution targets with actual IDs from your account.
+launch. Both directions between every provider pair are supported. **용도별 기본 매핑**
+fills four editable task groups and shows their names in model selectors:
+
+| Purpose | OpenAI | Claude | Gemini |
+| --- | --- | --- | --- |
+| Deep reasoning | Astra | Fable | Gemini 4 Argon |
+| Complex coding | Sol | Opus | Pro |
+| General coding | Terra | Sonnet | Flash |
+| Fast tasks | Luna | Haiku | Flash-Lite |
+
+These are purpose preferences, not equivalent benchmark scores. Existing choices and
+routes are preserved. Registered account IDs are preferred; absent families use
+explicit request aliases, marked as unavailable for execution on that provider.
+Replace an execution target with an ID available from its connected account. Pro effort
+variants belong to the same purpose group; a family alias does not set reasoning effort.
+Argon and Flash-Lite are not currently listed among [Antigravity models](https://antigravity.google/docs/models).
+`gemini-4-argon` is a request alias here, not a claim that the account has Google Argon access.
+
 Claude's Fable, Opus, Sonnet, and Haiku shortcuts can be assigned to rows; unassigned
 shortcuts use the selected session model. Settings persist after restart. Reopen
 CLI sessions after changing mappings, and refresh the model selector if its preview
 is outdated. See the [mapping guide](docs/solutions/architecture-patterns/provider-model-mapping.md).
 Selecting `fable` preserves that Claude shortcut while its configured execution
 provider receives the corresponding mapped model.
+
+Antigravity's `/model` menu receives all mapped models for its execution provider.
+Readable provider-scoped names such as `tb-agy-codex-gemini-4-argon` keep the selected
+account unambiguous. The launch model is pinned explicitly because Antigravity restores
+its previous selection; changing the menu affects that CLI session.
 
 The gateway uses loopback port 8317. An occupied port produces an error; TommyBrown
 does not stop other applications. Closing TommyBrown stops its own gateway.

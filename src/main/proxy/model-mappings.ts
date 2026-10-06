@@ -16,6 +16,10 @@ export type ModelAliases = Record<
 export function modelAlias(provider: Provider, model: string): string {
   return `tb-${provider}-${createHash("sha256").update(model.toLowerCase()).digest("hex").slice(0, 24)}`;
 }
+export function antigravityAlias(provider: Provider, source: string): string {
+  const alias = `tb-agy-${provider}-${source.toLowerCase()}`;
+  return alias.length <= 200 ? alias : modelAlias(provider, `agy:${source}`);
+}
 export function mappingRevision(settings: ModelMappings): string {
   return createHash("sha256").update(JSON.stringify(settings)).digest("hex");
 }
@@ -28,6 +32,18 @@ export function compileAliases(settings: ModelMappings): ModelAliases {
         aliases[provider].push({
           name: model,
           alias: modelAlias(provider, model),
+          fork: true,
+        });
+    }
+  const target = settings.routes.antigravity;
+  if (target)
+    for (const row of settings.rows) {
+      const source = row.models.antigravity;
+      const model = row.models[target];
+      if (source && model)
+        aliases[target].push({
+          name: model,
+          alias: antigravityAlias(target, source),
           fork: true,
         });
     }

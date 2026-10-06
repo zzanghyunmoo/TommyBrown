@@ -138,8 +138,8 @@ console.log('routed-cli-ready');`,
     await expect
       .poll(async () => JSON.parse(await readFile(capture, "utf8")))
       .toMatchObject({
-        args: ["--model", modelAlias("codex", target), "--fixture"],
-        agyModel: modelAlias("codex", target),
+        args: ["--model", "tb-agy-codex-astra", "--fixture"],
+        agyModel: "tb-agy-codex-astra",
         hasAgyKey: true,
       });
     await page.evaluate(

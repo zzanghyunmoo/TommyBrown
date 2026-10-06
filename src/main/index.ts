@@ -20,6 +20,7 @@ import { registerConnectors } from "./connectors/register";
 import { ModelService } from "./models";
 import { LaunchSettingsStore } from "./proxy/launch-settings";
 import { registerModels } from "./proxy/register";
+import { registerTerminals } from "./terminal/register";
 import { TerminalService } from "./terminal/service";
 import { shellProfile } from "./terminal/shell-profile";
 import { WorkbenchController } from "./workbench/controller";
@@ -181,12 +182,7 @@ async function boot(): Promise<void> {
   bind("workspace:dirty", (input) => {
     hasDirtyDocuments = z.boolean().parse(input);
   });
-  bind("terminal:launch", (input) => terminals.launch(input));
-  bind("terminal:list", () => terminals.list());
-  bind("terminal:attach", (input) => terminals.attach(z.uuid().parse(input)));
-  bind("terminal:write", (input) => terminals.write(input));
-  bind("terminal:resize", (input) => terminals.resize(input));
-  bind("terminal:close", (input) => terminals.close(z.uuid().parse(input)));
+  registerTerminals(terminals, bind);
   bind("browser:snapshot", (input) =>
     browser.snapshot(browserGroupSchema.default("browser").parse(input)),
   );

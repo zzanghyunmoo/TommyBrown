@@ -15,6 +15,7 @@ import {
 } from "../../shared/proxy";
 import type { ProxyKeys } from "./config";
 import {
+  antigravityAlias,
   type ModelMappingStore,
   mappingRevision,
   modelAlias,
@@ -76,6 +77,42 @@ export class ModelRouting {
       const catalog = await this.providerModels(
         await this.runtime.client().accounts(),
       );
+      if (request.cli === "antigravity") {
+        const selected = antigravityAlias(target.provider, request.model);
+        const choices: string[] = [];
+        for (const row of settings.rows) {
+          const source = row.models.antigravity;
+          if (!source) continue;
+          const model = row.models[target.provider];
+          if (!model)
+            throw new GatewayError(
+              "configuration",
+              `${row.name} 행에 ${providerLabels[target.provider]} 모델을 입력해 주세요.`,
+            );
+          choices.push(
+            await this.availableAlias(
+              target.provider,
+              model,
+              catalog,
+              antigravityAlias(target.provider, source),
+            ),
+          );
+        }
+        const profile = createLaunchProfile(
+          { ...request, model: selected },
+          { port: gateway.port, key: this.keys.client },
+        );
+        return {
+          ...profile,
+          environment: {
+            ...profile.environment,
+            AGY_LLM_GATEWAY_MODELS: [
+              selected,
+              ...choices.filter((alias) => alias !== selected),
+            ].join(","),
+          },
+        };
+      }
       const alias = await this.availableAlias(
         target.provider,
         target.model,
@@ -141,13 +178,13 @@ export class ModelRouting {
     provider: Provider,
     model: string,
     catalog: ProviderModels,
+    alias = modelAlias(provider, model),
   ): Promise<string> {
     if (!catalog[provider].includes(model))
       throw new GatewayError(
         "configuration",
         `${providerLabels[provider]} 계정에서 ${model} 모델을 사용할 수 없습니다. 계정과 모델 ID를 확인해 주세요.`,
       );
-    const alias = modelAlias(provider, model);
     for (let attempt = 0; attempt < 15; attempt++) {
       if (catalog[provider].includes(alias)) {
         if (
