@@ -11,6 +11,29 @@ import {
 
 afterEach(() => vi.unstubAllGlobals());
 
+it("migrates the models page and retains settings categories with workspace state", () => {
+  const documents = [
+    { spaceId: "11111111-1111-4111-8111-111111111111", path: "draft.md" },
+  ];
+  let stored = JSON.stringify({ page: "models", documents });
+  vi.stubGlobal("localStorage", {
+    getItem: () => stored,
+    setItem: (_key: string, value: string) => {
+      stored = value;
+    },
+  });
+  expect(readViewState().page).toBe("settings");
+  expect(readViewState().settingsSection).toBe("proxy");
+  saveViewState({ settingsSection: "mcp", sidebarHidden: true });
+  saveViewState({ page: "workspace" });
+  expect(readViewState()).toMatchObject({
+    page: "workspace",
+    settingsSection: "mcp",
+    sidebarHidden: true,
+    documents,
+  });
+});
+
 it("migrates forced support panes once while retaining documents and web sessions", () => {
   const spaceId = "11111111-1111-4111-8111-111111111111";
   const layout = splitPane(

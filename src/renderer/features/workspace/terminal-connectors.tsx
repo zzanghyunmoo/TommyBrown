@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { type Connector, isMcpConnector } from "../../../shared/connectors";
+import { isMcpConnector } from "../../../shared/connectors";
 import { Notice } from "../../components/primitives";
+import { useConnectorRegistry } from "./use-connector-registry";
 
 export function TerminalConnectors({
   selected,
@@ -11,24 +12,10 @@ export function TerminalConnectors({
   readonly change: (ids: readonly string[]) => void;
   readonly disabled: boolean;
 }) {
-  const [list, setList] = useState<readonly Connector[]>([]);
   const [error, setError] = useState<string>();
+  const list = useConnectorRegistry(setError).filter(isMcpConnector);
   return (
-    <details
-      className="terminal-connectors"
-      onToggle={(event) => {
-        if (!event.currentTarget.open) return;
-        void window.connectors
-          .list()
-          .then((next) => {
-            setList(next.filter(isMcpConnector));
-            setError(undefined);
-          })
-          .catch((failure: unknown) => {
-            if (failure instanceof Error) setError(failure.message);
-          });
-      }}
-    >
+    <details className="terminal-connectors">
       <summary>이 세션의 커넥터 · {selected.length}개</summary>
       {error && <Notice error>{error}</Notice>}
       {list.map((connector) => (
@@ -48,7 +35,7 @@ export function TerminalConnectors({
           {connector.name}
         </label>
       ))}
-      {!list.length && <p>커넥터 탭에서 MCP 연결을 추가하세요.</p>}
+      {!list.length && <p>설정의 MCP 게이트웨이에서 연결을 추가하세요.</p>}
       <p>
         선택한 연결은 새 CLI 세션에서 사용합니다. 연결을 해제하면 해당 연결을
         사용하는 터미널도 종료됩니다.

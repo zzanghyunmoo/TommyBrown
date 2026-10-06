@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Connector, ConnectorTool } from "../../../shared/connectors";
 import { Button, Notice } from "../../components/primitives";
 
@@ -16,6 +16,13 @@ export function ConnectorPermissions({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const policy = JSON.stringify(connector.allowedTools);
+  const lastPolicy = useRef(policy);
+  useEffect(() => {
+    if (lastPolicy.current === policy) return;
+    lastPolicy.current = policy;
+    setSelected(connector.allowedTools);
+  }, [policy, connector.allowedTools]);
   const dirty =
     JSON.stringify(selected) !== JSON.stringify(connector.allowedTools);
   const allowed =

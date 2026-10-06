@@ -10,6 +10,7 @@ import "./browser.css";
 import "./connectors.css";
 import "./workbench.css";
 import "./model-mappings.css";
+import "./settings.css";
 
 if (import.meta.env.DEV) {
   void import("react-grab");

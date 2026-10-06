@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  type Connector,
   type ConnectorCheck,
   isMcpConnector,
   type McpGatewayStatus,
@@ -9,18 +8,24 @@ import { Button, Notice } from "../../components/primitives";
 import { ConnectorForm } from "./connector-form";
 import { ConnectorPermissions } from "./connector-permissions";
 import { ConnectorTools } from "./connector-tools";
+import {
+  publishConnectors,
+  useConnectorRegistry,
+} from "./use-connector-registry";
 
 export function ConnectorPane({
   openWeb,
+  settings = false,
 }: {
-  readonly openWeb: (id: string) => Promise<void>;
+  readonly openWeb?: (id: string) => Promise<void>;
+  readonly settings?: boolean;
 }) {
-  const [connectors, setConnectors] = useState<readonly Connector[]>([]);
   const [checks, setChecks] = useState<
     Readonly<Record<string, ConnectorCheck>>
   >({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const connectors = useConnectorRegistry(setError);
   const [gateway, setGateway] = useState<McpGatewayStatus>();
   useEffect(() => {
     let active = true;
@@ -28,14 +33,6 @@ export function ConnectorPane({
       .gateway()
       .then((status) => {
         if (active) setGateway(status);
-      })
-      .catch((failure: unknown) => {
-        if (active && failure instanceof Error) setError(failure.message);
-      });
-    window.connectors
-      .list()
-      .then((list) => {
-        if (active) setConnectors(list);
       })
       .catch((failure: unknown) => {
         if (active && failure instanceof Error) setError(failure.message);
@@ -60,7 +57,7 @@ export function ConnectorPane({
     setChecks((previous) => ({ ...previous, [id]: check }));
   }
   async function disconnectConnection(id: string) {
-    setConnectors(await window.connectors.disconnect(id));
+    publishConnectors(await window.connectors.disconnect(id));
     setChecks((previous) =>
       Object.fromEntries(
         Object.entries(previous).filter(([key]) => key !== id),
@@ -69,12 +66,21 @@ export function ConnectorPane({
   }
   return (
     <section className="connector-pane" aria-label="커넥터 설정">
-      <header>
-        <h2>연결된 작업 도구</h2>
-        <p>
-          웹 로그인은 커넥터마다 별도로 보관합니다. MCP 주소를 추가하면 데이터와
-          도구를 사용할 수 있습니다.
-        </p>
+      <header className={settings ? "page-heading" : undefined}>
+        <div>
+          {settings ? (
+            <>
+              <span className="eyebrow">설정</span>
+              <h1>MCP 게이트웨이</h1>
+            </>
+          ) : (
+            <h2>연결된 작업 도구</h2>
+          )}
+          <p>
+            웹 로그인은 커넥터마다 별도로 보관합니다. MCP 주소를 추가하면
+            데이터와 도구를 사용할 수 있습니다.
+          </p>
+        </div>
       </header>
       <p role="status">
         MCP 게이트웨이 ·{" "}
@@ -93,7 +99,7 @@ export function ConnectorPane({
         busy={busy}
         add={(input, form) => {
           void run(async () => {
-            setConnectors(await window.connectors.add(input));
+            publishConnectors(await window.connectors.add(input));
             form.reset();
           });
         }}
@@ -118,14 +124,16 @@ export function ConnectorPane({
                 : "웹 세션 · 데이터 도구 미연결"}
           </p>
           <div className="connector-actions">
-            <Button
-              disabled={busy}
-              onClick={() => {
-                void run(() => openWeb(connector.id));
-              }}
-            >
-              웹 화면 열기
-            </Button>
+            {openWeb && (
+              <Button
+                disabled={busy}
+                onClick={() => {
+                  void run(() => openWeb(connector.id));
+                }}
+              >
+                웹 화면 열기
+              </Button>
+            )}
             {isMcpConnector(connector) && (
               <Button
                 busy={busy}
@@ -158,7 +166,7 @@ export function ConnectorPane({
               connector={connector}
               tools={checks[connector.id]?.tools ?? []}
               save={async (allowedTools) =>
-                setConnectors(
+                publishConnectors(
                   await window.connectors.setTools({
                     id: connector.id,
                     allowedTools:

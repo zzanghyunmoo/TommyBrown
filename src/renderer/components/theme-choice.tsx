@@ -5,8 +5,10 @@ import { changeTheme, currentTheme, subscribeTheme } from "../theme";
 
 export function ThemeChoice({
   report,
+  label = "화면 테마",
 }: {
   readonly report: (error: string | undefined) => void;
+  readonly label?: string;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, currentTheme);
   const [busy, setBusy] = useState(false);
@@ -27,7 +29,7 @@ export function ThemeChoice({
       )}
       <select
         ref={field}
-        aria-label="화면 테마"
+        aria-label={label}
         value={theme}
         disabled={busy}
         onChange={(event) => {

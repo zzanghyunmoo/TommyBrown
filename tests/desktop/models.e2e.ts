@@ -21,7 +21,7 @@ test("install, start, stop, and restore the real native model gateway", async ()
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await expect(
-      page.getByRole("heading", { name: "모델 연결", exact: true }),
+      page.getByRole("heading", { name: "프록시·모델", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Claude Code 계정 연결" }),

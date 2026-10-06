@@ -78,6 +78,20 @@ Account files stay in local application data with Windows access restricted to t
 current user. Application keys use OS encryption. Provider token files are managed
 by CLIProxyAPI and are not encrypted by TommyBrown itself.
 
+## Settings
+
+Open **설정** from the header or sidebar, then choose a category:
+
+- **프록시·모델**: proxy lifecycle, account connections, model mappings and CLI defaults.
+- **일반·색상**: Bright/Dark colors for the app, terminal and editor, plus sidebar visibility.
+- **MCP 게이트웨이**: gateway status, connector registration, tool inspection and saved permissions.
+
+MCP settings work before opening a workspace. Connector changes also update the working
+pane and terminal selector. Switching settings retains unsaved inputs and live terminal
+sessions; the last category, theme and sidebar choice restore after restarting.
+The header theme selector remains available as a shortcut.
+See the [settings checkpoint](docs/verification/2026-10-06-settings-categories.md).
+
 ## Workspace and connectors
 
 - Start with one working area and switch between Terminal, Code/Documents, and

@@ -16,7 +16,7 @@ export function ModelAccess() {
         <div className="page-heading">
           <div>
             <span className="eyebrow">연결 설정</span>
-            <h1>모델 연결</h1>
+            <h1>프록시·모델</h1>
             <p>사용 중인 계정의 모델을 다른 CLI에서도 선택하세요.</p>
           </div>
           <Button

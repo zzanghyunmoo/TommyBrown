@@ -8,7 +8,7 @@ import {
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Button, Notice } from "./components/primitives";
 import { ThemeChoice } from "./components/theme-choice";
-import { ModelAccess } from "./features/models/model-access";
+import { SettingsPage } from "./features/settings/settings-page";
 import { useSpaces } from "./features/workspace/use-spaces";
 import { useTerminals } from "./features/workspace/use-terminals";
 import { readViewState, saveViewState } from "./features/workspace/view-state";
@@ -25,7 +25,7 @@ export function App() {
   const [sidebarHidden, setSidebarHidden] = useState(
     () => readViewState().sidebarHidden,
   );
-  const [page, setPage] = useState<"models" | "workspace" | null>(
+  const [page, setPage] = useState<"settings" | "workspace" | null>(
     () => readViewState().page,
   );
   const [settingsError, setSettingsError] = useState<string>();
@@ -44,7 +44,7 @@ export function App() {
       setSettingsError("화면 설정을 저장하지 못했습니다.");
     }
   }, [page]);
-  const screen = !spaces.selected ? "models" : (page ?? "workspace");
+  const screen = !spaces.selected ? "settings" : (page ?? "workspace");
   async function choose(kind: "workspace" | "vault") {
     const state = await spaces.choose(kind);
     if (state?.selectedSpace) setPage("workspace");
@@ -141,12 +141,12 @@ export function App() {
             <span className="eyebrow">SETTINGS</span>
             <button
               type="button"
-              className={`nav-row space-row ${screen === "models" ? "selected" : ""}`}
-              aria-current={screen === "models" ? "page" : undefined}
-              onClick={() => setPage("models")}
+              className={`nav-row space-row ${screen === "settings" ? "selected" : ""}`}
+              aria-current={screen === "settings" ? "page" : undefined}
+              onClick={() => setPage("settings")}
             >
               <GearIcon />
-              모델 연결
+              설정
             </button>
           </div>
         </div>
@@ -169,11 +169,11 @@ export function App() {
             <button
               type="button"
               className="workspace-tab"
-              aria-current={screen === "models" ? "page" : undefined}
-              onClick={() => setPage("models")}
+              aria-current={screen === "settings" ? "page" : undefined}
+              onClick={() => setPage("settings")}
             >
               <GearIcon />
-              <span>모델 연결</span>
+              <span>설정</span>
             </button>
             {spaces.selected && (
               <button
@@ -194,8 +194,11 @@ export function App() {
           {spaces.error && <Notice error>{spaces.error}</Notice>}
           {settingsError && <Notice error>{settingsError}</Notice>}
           {appearanceError && <Notice error>{appearanceError}</Notice>}
-          <div className="workspace-page" hidden={screen !== "models"}>
-            <ModelAccess />
+          <div className="workspace-page" hidden={screen !== "settings"}>
+            <SettingsPage
+              sidebarHidden={sidebarHidden}
+              setSidebarHidden={setSidebarHidden}
+            />
           </div>
           {spaces.selected && (
             <div className="workspace-page" hidden={screen !== "workspace"}>
