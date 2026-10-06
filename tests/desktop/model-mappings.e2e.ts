@@ -34,9 +34,9 @@ test("edit, validate, route all six directions, and restore model mappings", asy
       if (!model) throw new Error(`No ${provider} fixture model`);
       models[provider] = model;
     }
-    await page.getByRole("button", { name: "예시 4행 추가" }).click();
+    await page.getByRole("button", { name: "용도별 기본 매핑" }).click();
     await expect(page.getByLabel("매핑 이름 4", { exact: true })).toHaveValue(
-      "Lunar · Haiku",
+      "빠른 작업 · Luna / Haiku",
     );
     await page.getByRole("button", { name: "변경 취소", exact: true }).click();
     await expect(page.getByLabel("매핑 이름 4", { exact: true })).toHaveCount(
@@ -162,6 +162,44 @@ test("edit, validate, route all six directions, and restore model mappings", asy
       expect(snapshot.providerModels[provider]).toContain(
         modelAlias(provider, models[provider]),
       );
+    await page.getByRole("button", { name: "용도별 기본 매핑" }).click();
+    await page.getByRole("button", { name: "용도별 기본 매핑" }).click();
+    await expect(page.getByLabel("매핑 이름 5", { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(page.getByLabel("매핑 이름 4", { exact: true })).toHaveValue(
+      "빠른 작업 · Luna / Haiku",
+    );
+    await expect(page.getByLabel("매핑 이름 1", { exact: true })).toHaveValue(
+      "실행 모델 연결",
+    );
+    await page.getByRole("button", { name: "매핑 저장", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "매핑 저장", exact: true }),
+    ).toBeDisabled();
+    await page.reload();
+    await expect(page.getByLabel("매핑 이름 4", { exact: true })).toHaveValue(
+      "빠른 작업 · Luna / Haiku",
+    );
+    await page
+      .getByLabel("사용할 CLI", { exact: true })
+      .selectOption("antigravity");
+    await expect(page.getByLabel("사용할 모델", { exact: true })).toContainText(
+      "빠른 작업 · Luna / Haiku",
+    );
+    for (const theme of ["light", "dark"]) {
+      await page.getByLabel("화면 테마", { exact: true }).selectOption(theme);
+      await page
+        .getByRole("heading", { name: "모델 매핑", exact: true })
+        .evaluate((element) => element.scrollIntoView({ block: "start" }));
+      await expect(
+        page.getByLabel("매핑 이름 4", { exact: true }),
+      ).toBeInViewport();
+      await nativeCapture(
+        reopened,
+        `test-results/purpose-mappings-${theme}-native.png`,
+      );
+    }
   } finally {
     await reopened.close();
   }

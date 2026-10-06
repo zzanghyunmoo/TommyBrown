@@ -109,6 +109,9 @@ always clamps to the IPC contract.
 - **Panel**: title, optional description/action, body, 8px radius, neutral border.
   Empty/loading/error states retain the panel's purpose and recovery action.
 - **Field**: associated label, native input/select, description or inline error.
+- **Model mapping**: existing editable table; purpose leads the row name and model
+  option label. An unregistered ID gets a muted text explanation as a request alias.
+  Presets preserve existing IDs and routes; missing families never imply availability.
 - **Provider row**: provider, account type, actual connection state and login action.
   Pending login has cancel/reopen and a deadline; callbacks alone do not prove success.
 - **Tab**: role tab, selected background and label; independently labelled close button.
@@ -133,6 +136,9 @@ immediately; failures remain until retry or dismissal. Native controls retain OS
 Ctrl+B prefixes workbench commands across local and remote content. Show prefix/resize
 mode as text, Escape cancels, and focus/splitter movement is immediate. Theme changes do
 not interrupt editor undo history, terminal input or browser navigation.
+Terminal Ctrl+Shift+C copies selected text; an empty selection keeps the clipboard.
+Ctrl+Shift+V pastes text, retaining bracketed paste and adding no Enter. Ctrl+C remains
+interrupt. Discard asynchronous paste after terminal focus changes or the session exits.
 
 ## 7. Depth & Surface
 

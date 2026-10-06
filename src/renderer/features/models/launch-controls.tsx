@@ -3,6 +3,7 @@ import { useState } from "react";
 import { launchRequestSchema } from "../../../shared/launch";
 import {
   emptyMappings,
+  launchModelLabel,
   launchModels,
   type ModelMappings,
 } from "../../../shared/model-mappings";
@@ -77,7 +78,7 @@ export function LaunchControls({
             )}
             {choices.map((candidate) => (
               <option key={candidate} value={candidate}>
-                {candidate}
+                {launchModelLabel(mappings, cli, candidate)}
               </option>
             ))}
           </select>
