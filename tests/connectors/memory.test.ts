@@ -35,7 +35,7 @@ async function fixture() {
   await store.add({
     kind: "memory",
     name: "Memory",
-    webUrl: "https://github.com/modelcontextprotocol/servers/",
+    webUrl: null,
     endpoint: null,
     token: null,
   });

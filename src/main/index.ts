@@ -13,6 +13,7 @@ import {
 import { z } from "zod";
 import { themeCanvas } from "../shared/appearance";
 import { browserGroupSchema } from "../shared/browser";
+import { isMcpConnector } from "../shared/connectors";
 import { AppearanceStore } from "./appearance";
 import { BrowserService } from "./browser/service";
 import { McpGateway } from "./connectors/gateway";
@@ -203,7 +204,11 @@ async function boot(): Promise<void> {
         group: browserGroupSchema.default("browser"),
       })
       .parse(input);
-    if (request.connectorId) connectors.store.require(request.connectorId);
+    if (
+      request.connectorId &&
+      isMcpConnector(connectors.store.require(request.connectorId))
+    )
+      throw new Error("Tool connections cannot be opened as web apps.");
     return browser.open(request.url, request.connectorId, request.group);
   });
   bind("browser:navigate", (input) => browser.navigate(input));
@@ -245,6 +250,7 @@ async function boot(): Promise<void> {
           });
           if (answer.response !== 1) return;
         }
+        await connectors.oauth.stop();
         await terminals.stop();
         await mcpGateway.stop();
         browser.stop();

@@ -51,10 +51,10 @@ async function fixture() {
 it("persists encrypted secrets while exposing only token presence and removes disconnected definitions", async () => {
   const { path, codec, store } = await fixture();
   const list = await store.add({
-    kind: "github",
+    kind: "mcp",
     name: "Source",
-    webUrl: "https://github.com/",
-    endpoint: null,
+    webUrl: null,
+    endpoint: "https://example.com/mcp",
     token: "private-test-token",
   });
   expect(JSON.stringify(list)).not.toContain("private-test-token");
@@ -143,9 +143,9 @@ it("negotiates an actual HTTP MCP connection and calls only the explicitly reque
   if (!address || typeof address === "string")
     throw new Error("No fixture port");
   const [connector] = await store.add({
-    kind: "notion",
+    kind: "mcp",
     name: "Fixture",
-    webUrl: "https://www.notion.so/",
+    webUrl: null,
     endpoint: `http://127.0.0.1:${address.port}/mcp`,
     token: "fixture-token",
   });
@@ -182,9 +182,9 @@ it("rejects credential-bearing and unencrypted remote MCP endpoints", () => {
 it("gives all three CLIs one revocable gateway without exposing upstream credentials", async () => {
   const { store } = await fixture();
   const [connector] = await store.add({
-    kind: "github",
+    kind: "mcp",
     name: "Source",
-    webUrl: "https://github.com/",
+    webUrl: null,
     endpoint: "https://example.com/mcp",
     token: "fixture-only-secret",
   });

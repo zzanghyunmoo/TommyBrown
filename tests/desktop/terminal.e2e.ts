@@ -72,7 +72,7 @@ test("native PTY stays alive across tabs and owned processes stop", async () => 
       );
     }
     await page
-      .getByRole("button", { name: "모델 연결", exact: true })
+      .getByRole("button", { name: "설정", exact: true })
       .first()
       .click();
     await page.locator(".space-row").filter({ hasText: "project" }).click();

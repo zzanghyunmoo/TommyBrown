@@ -5,7 +5,14 @@ import { parseLayout, workingLayout } from "./layout";
 const viewSchema = z.object({
   layoutVersion: z.number().default(1),
   workMode: z.enum(["terminal", "documents", "connectors"]).default("terminal"),
-  page: z.enum(["models", "workspace"]).nullable().default(null),
+  page: z
+    .enum(["models", "settings", "workspace"])
+    .nullable()
+    .default(null)
+    .transform((page) => (page === "models" ? "settings" : page)),
+  settingsSection: z
+    .enum(["proxy", "general", "connectors", "mcp"])
+    .default("proxy"),
   pane: z.enum(["documents", "browser", "connectors"]).default("documents"),
   documents: z.array(fileRequestSchema).max(32).default([]),
   selectedDocument: z.string().nullable().default(null),

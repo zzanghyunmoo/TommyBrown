@@ -49,10 +49,10 @@ test("choose a real space, preserve drafts across tabs, save and detect conflict
     await page.getByRole("tab", { name: "터미널", exact: true }).click();
     await page.getByRole("tab", { name: "터미널", exact: true }).press("End");
     await expect(
-      page.getByRole("tab", { name: "커넥터", exact: true }),
+      page.getByRole("tab", { name: "웹 앱", exact: true }),
     ).toBeFocused();
     await page
-      .getByRole("tab", { name: "커넥터", exact: true })
+      .getByRole("tab", { name: "웹 앱", exact: true })
       .press("ArrowLeft");
     await expect(
       page.getByRole("tab", { name: "코드·문서", exact: true }),

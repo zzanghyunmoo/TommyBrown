@@ -302,7 +302,7 @@ test("working tabs and automatic right split preserve sessions through Herdr com
     ).toBeHidden();
     await page.getByRole("button", { name: "사이드바 표시 전환" }).click();
     await page
-      .getByRole("button", { name: "모델 연결", exact: true })
+      .getByRole("button", { name: "설정", exact: true })
       .first()
       .click();
     await expect.poll(visibleViews).toBe(0);

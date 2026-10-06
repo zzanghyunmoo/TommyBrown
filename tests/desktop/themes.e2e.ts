@@ -142,7 +142,7 @@ test("themes retain live work and persist across reload and restart", async () =
         desktop,
         `test-results/themes-terminal-${theme}-native.png`,
       );
-      await page.getByRole("tab", { name: "커넥터", exact: true }).click();
+      await page.getByRole("tab", { name: "웹 앱", exact: true }).click();
       await nativeCapture(
         desktop,
         `test-results/themes-connectors-${theme}-native.png`,

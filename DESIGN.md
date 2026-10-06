@@ -76,6 +76,11 @@ at 280px with ellipsis for long names. Theme control stays visible with sidebar 
 Settings cap at 1120px, with 24px padding (20px below 1100px), 20px vertical rhythm
 and compact provider rows. The guide is a bottom disclosure.
 
+Settings opens from both the header and sidebar. Its persistent tab bar groups
+Proxy/Models, General/Colors and MCP Gateway. Panels retain drafts while hidden;
+each owns scrolling below the tab bar. General reuses the shared theme choice and
+sidebar visibility controls. MCP registration works before a workspace is opened.
+
 Root is 100dvh. Sidebar, settings content, file tree and each working pane own bounded
 scroll regions. Grid/flex children use min-width/min-height zero. Native minimum is
 960x640; the sidebar can be hidden. The component showcase also exercises 768/375px.

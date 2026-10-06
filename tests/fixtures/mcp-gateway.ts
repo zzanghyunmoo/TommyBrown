@@ -107,9 +107,9 @@ export async function fixture() {
   const endpoint = `http://127.0.0.1:${address.port}/mcp`;
   for (const name of ["First", "Second"])
     await store.add({
-      kind: "github",
+      kind: "mcp",
       name,
-      webUrl: "https://github.com/",
+      webUrl: null,
       endpoint,
       token: "upstream-test-secret",
     });
