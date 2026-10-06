@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { packager } from "@electron/packager";
 import { z } from "zod";
+import "./prepare-native";
 
 const platform = z.enum(["win32", "darwin"]).parse(process.platform);
 const arch = z.enum(["x64", "arm64"]).parse(process.arch);

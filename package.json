@@ -6,6 +6,7 @@
   "type": "module",
   "main": "dist/main/index.cjs",
   "scripts": {
+    "postinstall": "bun run scripts/prepare-native.ts",
     "check": "tsc --noEmit",
     "lint": "biome check .",
     "test": "vitest run",
