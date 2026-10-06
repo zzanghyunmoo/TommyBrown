@@ -1,8 +1,30 @@
 import { constants } from "node:fs";
 import { access, readFile, stat } from "node:fs/promises";
+import { homedir } from "node:os";
 import { delimiter, dirname, extname, join } from "node:path";
 import { z } from "zod";
 import { desktopPath } from "./posix";
+
+export class CliNotFoundError extends Error {
+  constructor(readonly command: string) {
+    super(
+      `${command} was not found on PATH. Install the CLI before opening a session.`,
+    );
+  }
+}
+
+export function nativeCliDirectories(): string[] {
+  const local = process.env["LOCALAPPDATA"];
+  return [
+    join(homedir(), ".local", "bin"),
+    ...(local
+      ? [
+          join(local, "Programs", "OpenAI", "Codex", "bin"),
+          join(local, "agy", "bin"),
+        ]
+      : []),
+  ];
+}
 
 async function executableOnPath(
   name: string,
@@ -41,9 +63,7 @@ async function executableOnPath(
       }
     }
   }
-  throw new Error(
-    `${name} was not found on PATH. Install the CLI before opening a session.`,
-  );
+  throw new CliNotFoundError(name);
 }
 
 export async function resolveCli(cli: "claude" | "codex" | "antigravity") {
@@ -65,7 +85,7 @@ export async function resolveCli(cli: "claude" | "codex" | "antigravity") {
     return { executable: path, args: [] };
   }
   const name = cli;
-  const path = await executableOnPath(name);
+  const path = await executableOnPath(name, nativeCliDirectories());
   if ([".exe", ".com"].includes(extname(path).toLowerCase()))
     return { executable: path, args: [] };
   const packageName =

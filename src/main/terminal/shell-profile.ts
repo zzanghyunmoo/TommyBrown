@@ -5,7 +5,7 @@ import type { ConnectorSession } from "../connectors/profiles";
 import type { ModelService } from "../models";
 import { bashProfile, quotePosix } from "./posix";
 import { powerShellProfile } from "./powershell";
-import { resolveCli } from "./resolve-cli";
+import { nativeCliDirectories, resolveCli } from "./resolve-cli";
 
 export async function shellProfile(
   models: Pick<ModelService, "launchProfile">,
@@ -15,6 +15,15 @@ export async function shellProfile(
   const environment: Record<string, string | null> = {};
   const commands: string[] = [];
   const windows = process.platform === "win32";
+  if (windows) {
+    const path =
+      Object.entries(process.env).find(
+        ([key]) => key.toLowerCase() === "path",
+      )?.[1] ?? "";
+    environment["Path"] = [path, ...nativeCliDirectories()]
+      .filter(Boolean)
+      .join(delimiter);
+  }
   const quote = windows
     ? (value: string) => `'${value.replaceAll("'", "''")}'`
     : quotePosix;
@@ -51,7 +60,7 @@ export async function shellProfile(
             ([key]) => key.toLowerCase() === "path",
           )?.[1] ?? "";
         environment["Path"] =
-          `${dirname(target.executable)}${delimiter}${path}`;
+          `${dirname(target.executable)}${delimiter}${environment["Path"] ?? path}`;
       }
     } catch (error) {
       if (!(error instanceof Error)) throw error;

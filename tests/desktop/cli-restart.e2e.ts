@@ -25,7 +25,8 @@ test("reopening restores the gateway, Fable selection and routed PowerShell comm
   const capture = resolve(directory, "capture.json");
   await writeFile(
     fixture,
-    `const fs = require('node:fs');
+    `if (process.argv.includes('--version')) { console.log('CLI fixture 1.0.0'); process.exit(0); }
+const fs = require('node:fs');
 fs.writeFileSync(process.env.TOMMYBROWN_CAPTURE, JSON.stringify({args: process.argv.slice(2), fable: process.env.ANTHROPIC_DEFAULT_FABLE_MODEL, agyModel: process.env.AGY_LLM_GATEWAY_MODELS, agyUrl: process.env.AGY_LLM_GATEWAY_URL, hasAgyKey: !!process.env.AGY_LLM_GATEWAY_API_KEY}));
 console.log('routed-cli-ready');`,
   );

@@ -39,6 +39,45 @@
   height: var(--s4);
   accent-color: var(--accent);
 }
+.agent-installation {
+  padding: var(--s4) var(--s5);
+  font-size: var(--text-sm);
+  min-width: 0;
+}
+.agent-installation-heading,
+.agent-installation-heading > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+.agent-installation-heading {
+  justify-content: space-between;
+}
+.agent-installation p {
+  margin-block: var(--s2);
+  overflow-wrap: anywhere;
+}
+.agent-path {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: var(--text-xs);
+}
+.agent-installation details {
+  margin-top: var(--s3);
+}
+.agent-installation-log {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+  max-height: 160px;
+  font-size: var(--text-xs);
+}
+.agent-installation.compact {
+  max-height: 220px;
+  overflow: auto;
+  flex-shrink: 0;
+}
 @media (max-width: 1100px) {
   .general-settings,
   .settings-panel > .connector-pane {
