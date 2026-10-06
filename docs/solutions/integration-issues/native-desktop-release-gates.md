@@ -25,9 +25,23 @@ survive. On Windows call the system bsdtar by absolute system path: Git Bash's G
 tar does not produce ZIP merely because an output filename ends in .zip.
 
 The release smoke in tests/desktop/release.e2e.ts exercises the packaged app,
-Memory, real proxy installation and restart restoration. Its Windows run passed.
+Memory, real proxy installation and restart restoration. Native Windows x64,
+macOS arm64 and macOS x64 runs all passed before publishing v0.1.0.
 Require the same native CI gate on both Mac architectures before publication;
 do not substitute cross-compilation or a successful bundle command for that gate.
+
+The native jobs exposed node-pty 1.1.0's Darwin spawn-helper mode 666, producing
+posix_spawnp failed despite a successful package build. scripts/prepare-native.ts
+sets the matching installed helper to 755 during dependency installation and
+again before packaging. Both Mac PTY tests then passed, and downloaded ZIPs retain
+mode 755. This matches the [upstream node-pty report](https://github.com/microsoft/node-pty/issues/850).
+
+Keep build text files LF with .gitattributes. On macOS compare canonical paths
+using realpath rather than assuming /var and /private/var differ. On Windows,
+PowerShell 7 can pass incompatible module paths through an intermediate process
+to Windows PowerShell. The ACL verification test removes PSModulePath from that
+child environment so built-in Get-Acl loads, without relaxing access assertions.
+See [Microsoft's module-path guidance](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_psmodulepath?view=powershell-7.6#starting-windows-powershell-from-powershell-7).
 
 An ad-hoc Mac signature establishes bundle integrity, not publisher trust or Apple
 notarization. Document first-launch approval and checksums honestly. Keep release
